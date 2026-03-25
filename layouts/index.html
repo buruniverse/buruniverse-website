@@ -54,6 +54,20 @@
     }
     
         #nav-container::-webkit-scrollbar { display: none; }
+
+        .tokushoho-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.6rem;
+            opacity: 0.35;
+            color: inherit;
+            text-decoration: none;
+            z-index: 100;
+            letter-spacing: 0.05em;
+            transition: opacity 0.3s;
+        }
+        .tokushoho-link:hover { opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -76,6 +90,10 @@
             </a>
         {{ end }}
     </nav>
+
+    {{ if eq .Lang "ja" }}
+    <a href="{{ "/tokushoho/" | relLangURL }}" class="tokushoho-link">特定商取引法に基づく表記</a>
+    {{ end }}
 
     {{ partial "scripts.html" . }}
 </body>
