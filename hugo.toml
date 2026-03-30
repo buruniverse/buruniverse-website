@@ -1,5 +1,5 @@
-baseURL = 'https://fog-observation-portal.pages.dev/'
-title = '∴ Fog Observation Portal ∵' # 英語タイトルをメインに
+baseURL = 'https://buruniverse.pages.dev/'
+title = '∴Buruniverse∵' # 英語タイトルをメインに
 defaultContentLanguage = 'en'        # ★ここを英語(en)に変更！
 
 [languages]
@@ -8,7 +8,7 @@ defaultContentLanguage = 'en'        # ★ここを英語(en)に変更！
     languageName = 'English'
     contentDir = 'content/en'
     weight = 1  # 優先順位を1位に
-    title = "∴ Fog <br class='mobile-break'>Observation <br class='mobile-break'>Portal ∵"
+    title = '∴Buruniverse∵'
     
     # 英語メニュー（ここをアクティブにする）
     # [[languages.en.menu.main]]
@@ -65,7 +65,7 @@ defaultContentLanguage = 'en'        # ★ここを英語(en)に変更！
     languageName = '日本語'
     contentDir = 'content/ja'
     weight = 2
-    title = '∴霧観測窓∵'
+    title = '∴ぶるニバース∵'
     
      [[languages.ja.menu.main]]
          identifier = 'blog'
