@@ -1,5 +1,4 @@
-name: Auto Front Matter
-
+name: Auto Front Matter + EN翻訳
 on:
   push:
     branches: [main]
@@ -7,18 +6,25 @@ on:
       - 'content/ja/posts/**'
 
 jobs:
-  add-frontmatter:
+  process:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Front Matter を自動追加
         run: python3 .github/scripts/add_frontmatter.py
 
+      - name: 英語に翻訳
+        env:
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
+        run: |
+          git diff --name-only HEAD content/ja/posts/ > changed.txt
+          cat changed.txt
+          xargs python3 .github/scripts/translate.py < changed.txt
+
       - name: 変更をコミット
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto: Front Matter を追加"
+          commit_message: "Auto: Front Matter + EN翻訳"
