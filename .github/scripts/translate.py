@@ -10,25 +10,44 @@ DEEPL_API_KEY = os.environ['DEEPL_API_KEY'].strip()
 # 無料プランのURL（キーが :fx で終わる）
 API_URL = 'https://api-free.deepl.com/v2/translate'
 
+KAOMOJI_PATTERN = re.compile(
+    r'[（(|｜][ω∀дﾟ；;･・ー≡*＊]{1,15}[）)\'`]'
+)
+
+def protect_kaomoji(text):
+    placeholders = {}
+    counter = [0]
+    def replace(m):
+        key = f'__KAOMOJI{counter[0]}__'
+        placeholders[key] = m.group(0)
+        counter[0] += 1
+        return key
+    return KAOMOJI_PATTERN.sub(replace, text), placeholders
+
+def restore_kaomoji(text, placeholders):
+    for key, val in placeholders.items():
+        text = text.replace(key, val)
+    return text
+
 def translate(text):
-    # DeepL推奨の認証ヘッダー方式
     api_url = (
         'https://api-free.deepl.com/v2/translate'
         if DEEPL_API_KEY.endswith(':fx')
         else 'https://api.deepl.com/v2/translate'
     )
+    protected_text, placeholders = protect_kaomoji(text)
     data = urllib.parse.urlencode({
-        'text': text,
+        'text': protected_text,
         'source_lang': 'JA',
         'target_lang': 'EN-US',
     }).encode()
     req = urllib.request.Request(
-        api_url,
-        data=data,
+        api_url, data=data,
         headers={'Authorization': f'DeepL-Auth-Key {DEEPL_API_KEY}'}
     )
     with urllib.request.urlopen(req) as res:
-        return json.loads(res.read())['translations'][0]['text']
+        result = json.loads(res.read())['translations'][0]['text']
+    return restore_kaomoji(result, placeholders)
 
 def process_file(ja_path):
     content = Path(ja_path).read_text(encoding='utf-8')
