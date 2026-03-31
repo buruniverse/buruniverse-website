@@ -11,7 +11,7 @@ DEEPL_API_KEY = os.environ['DEEPL_API_KEY'].strip()
 API_URL = 'https://api-free.deepl.com/v2/translate'
 
 KAOMOJI_PATTERN = re.compile(
-    r'[（(|｜][ω∀дﾟ；;･・ー≡*＊]{1,15}[）)\'`]'
+    r'[（(|｜][ω∀дﾟ；;･・ー≡*＊]{1,15}\s?[）)\'`]'
 )
 
 def protect_kaomoji(text):
