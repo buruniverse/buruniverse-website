@@ -6,7 +6,7 @@ import urllib.parse
 import json
 from pathlib import Path
 
-DEEPL_API_KEY = os.environ['DEEPL_API_KEY']
+DEEPL_API_KEY = os.environ['DEEPL_API_KEY'].strip()
 # 無料プランのURL（キーが :fx で終わる）
 API_URL = 'https://api-free.deepl.com/v2/translate'
 
