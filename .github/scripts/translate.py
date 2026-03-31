@@ -6,18 +6,27 @@ import urllib.parse
 import json
 from pathlib import Path
 
-DEEPL_API_KEY = os.environ['DEEPL_API_KEY']
+DEEPL_API_KEY = os.environ['DEEPL_API_KEY'].strip()
 # 無料プランのURL（キーが :fx で終わる）
 API_URL = 'https://api-free.deepl.com/v2/translate'
 
 def translate(text):
+    # DeepL推奨の認証ヘッダー方式
+    api_url = (
+        'https://api-free.deepl.com/v2/translate'
+        if DEEPL_API_KEY.endswith(':fx')
+        else 'https://api.deepl.com/v2/translate'
+    )
     data = urllib.parse.urlencode({
-        'auth_key': DEEPL_API_KEY,
         'text': text,
         'source_lang': 'JA',
         'target_lang': 'EN-US',
     }).encode()
-    req = urllib.request.Request(API_URL, data=data)
+    req = urllib.request.Request(
+        api_url,
+        data=data,
+        headers={'Authorization': f'DeepL-Auth-Key {DEEPL_API_KEY}'}
+    )
     with urllib.request.urlopen(req) as res:
         return json.loads(res.read())['translations'][0]['text']
 
