@@ -14,15 +14,17 @@ KAOMOJI_PATTERN = re.compile(
     r'[（(|｜][ω∀дﾟ；;･・ー≡*＊]{1,15}\s?[）)\'`]'
 )
 
-def protect_kaomoji(text):
+def protect_code_and_kaomoji(text):
     placeholders = {}
     counter = [0]
+    # バッククォートで囲まれた部分をすべて保護
+    pattern = re.compile(r'`[^`\n]+`')
     def replace(m):
-        key = f'__KAOMOJI{counter[0]}__'
-        placeholders[key] = m.group(0)
+        key = f'__KEEP{counter[0]}__'
+        placeholders[key] = m.group(0)[1:-1]  # バッククォートは外して中身だけ保存
         counter[0] += 1
         return key
-    return KAOMOJI_PATTERN.sub(replace, text), placeholders
+    return pattern.sub(replace, text), placeholders
 
 def restore_kaomoji(text, placeholders):
     for key, val in placeholders.items():
