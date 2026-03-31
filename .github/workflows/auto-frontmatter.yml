@@ -20,9 +20,13 @@ jobs:
         env:
           DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
         run: |
-          git diff --name-only HEAD content/ja/posts/ > changed.txt
+          git -c core.quotepath=false diff --name-only HEAD -- content/ja/posts/ > changed.txt
           cat changed.txt
-          xargs python3 .github/scripts/translate.py < changed.txt
+          if [ -s changed.txt ]; then
+            xargs -d '\n' python3 .github/scripts/translate.py < changed.txt
+          else
+            echo "翻訳対象ファイルなし"
+          fi
 
       - name: 変更をコミット
         uses: stefanzweifel/git-auto-commit-action@v5
