@@ -240,7 +240,7 @@
                 <h1 id="toc-header-title" class="toc-title">Table of Contents</h1>
                 <ul id="toc-list" class="toc-list"></ul>
             </div>
-            {{ range $index, $element := .Site.RegularPages }}
+            {{ range $index, $element := where .Site.RegularPages "Section" "posts" }}
             <article class="post-entry" id="post-{{ $index }}" 
                      data-tags="{{ with .Params.tags }}{{ delimit . "," }}{{ end }}"
                      data-title="{{ .Title }}"

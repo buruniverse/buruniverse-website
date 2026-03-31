@@ -1,0 +1,24 @@
+name: Auto Front Matter
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/ja/posts/**'
+
+jobs:
+  add-frontmatter:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Front Matter を自動追加
+        run: python3 .github/scripts/add_frontmatter.py
+
+      - name: 変更をコミット
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto: Front Matter を追加"
