@@ -1,3 +1,0 @@
----
-title: "μ Book Shelf"
----
