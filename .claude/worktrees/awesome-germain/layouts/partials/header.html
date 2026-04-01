@@ -1,0 +1,281 @@
+<header id="site-header" class="{{ if .IsHome }}page-home{{ else if .IsPage }}page-single{{ else }}page-list{{ end }}">
+    
+    {{ if .IsHome }}
+    <div id="center-branding">
+        <h1 id="main-title">
+            {{ .Site.Title | safeHTML }}
+        </h1>
+        <p id="site-description">
+            {{ if eq .Lang "en" }}
+                –Thoughts and experiments, <br class="desc-break">left unfocused as fog–
+            {{ else }}
+                ー霧のままの思考と実験ー
+            {{ end }}
+        </p>
+    </div>
+    {{ end }}
+
+    {{ if eq .Section "posts" }}
+    <div id="list-branding">
+        <h1 id="list-title">
+            <a href="{{ "posts/" | relURL }}">
+                {{ if eq .Lang "en" }}μ Book Shelf{{ else }}μ 本棚〈ブログ〉{{ end }}
+            </a>
+        </h1>
+    </div>
+    {{ end }}
+
+    {{ if not .IsHome }}
+    <div id="mini-branding">
+        <a href="{{ absURL "/" }}">
+            {{ if eq .Lang "en" }}
+                {{ .Site.Params.title_en_mini | default .Site.Title | safeHTML }}
+            {{ else }}
+                {{ .Site.Title | safeHTML }}
+            {{ end }}
+        </a>
+    </div>
+    {{ end }}
+
+    <div id="header-controls">
+        <span class="ctrl-btn" id="theme-toggle">☾</span>
+        <span class="separator">｜</span>
+        <span class="lang-switch">
+            {{ if .IsTranslated }}
+                {{ range .Translations }}
+                <a href="{{ .Permalink }}" class="ctrl-btn">{{ if eq .Lang "en" }}EN{{ else }}JA{{ end }}</a>
+                {{ end }}
+            {{ else }}
+                {{ if eq .Lang "ja" }}<a href="/en/" class="ctrl-btn">EN</a>{{ else }}<a href="/" class="ctrl-btn">JA</a>{{ end }}
+            {{ end }}
+        </span>
+    </div>
+</header>
+
+<style>
+    /* 1. ヘッダー全体の枠 */
+    #site-header {
+        position: fixed;
+        top: 0; left: 0; width: 100%;
+        height: 120px;
+        z-index: 100;
+        pointer-events: none;
+        opacity: 0; /* JSでふわっと出します */
+        transition: opacity 1.0s ease;
+    }
+
+    /* 2. 中央タイトルの配置（左寄りを防ぐために幅100%で中央揃えに） */
+    #center-branding {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    #list-branding {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        pointer-events: none;
+    }
+
+    #list-title {
+        display: inline-block;
+        font-size: 1.5rem;
+        font-weight: 300;
+        letter-spacing: 0.4rem;
+        margin: 0;
+        color: var(--text-color);
+        opacity: 0;
+        animation: fogFadeIn 1.5s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+    }
+    #list-title a {
+        text-decoration: none;
+        color: inherit;
+        pointer-events: auto; /* リンクとしてクリックできるように */
+        transition: opacity 0.3s;
+    }
+    #list-title a:hover {
+        opacity: 0.7; /* ホバーした時に少し薄くなる演出 */
+    }
+
+    /* 3. タイトル自体のデザインとフェードイン演出 */
+    #main-title {
+        display: inline-block;
+        font-size: 1.9rem;
+        font-weight: 300;
+        letter-spacing: 0.8rem;
+        margin: 0;
+        color: var(--text-color);
+        line-height: 1.3;
+        /* 霧の中から現れるようなアニメ */
+        animation: fogFadeIn 1.2s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+    }
+
+    #site-description {
+        font-size: 1.0rem;
+        font-weight: 300;
+        letter-spacing: 0.15rem;
+        margin: 15px 0 0 0;
+        color: var(--text-color);
+        opacity: 0.7;
+        line-height: 1.6;
+        animation: fogFadeIn 1.5s cubic-bezier(0.2, 0, 0.3, 1) 0.3s forwards;
+        animation-fill-mode: backwards;
+    }
+
+    /* PC版では改行を無効化 */
+    .desc-break {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        #site-description { 
+            font-size: 0.75rem; 
+            letter-spacing: 0.1rem;
+        }
+        /* スマホ版で改行を有効化 */
+        .desc-break {
+            display: block;
+        }
+    }
+
+    @media (max-width: 768px) {
+        #site-description { 
+            font-size: 0.9rem; 
+            letter-spacing: 0.1rem;
+        }
+    }
+
+    @keyframes fogFadeIn {
+        0% { opacity: 0; filter: blur(10px); transform: translateY(15px); }
+        100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+    }
+
+    /* 4. スマホだけ改行する仕組み */
+    .mobile-break { display: none; }
+
+    #mini-branding { position: absolute; top: 35px; left: 40px; pointer-events: auto; }
+    #mini-branding a { text-decoration: none; color: var(--text-color); font-size: 1.1rem; font-weight: 300; letter-spacing: 0.2rem; opacity: 0.8; }
+
+    #header-controls { position: absolute; top: 35px; right: 40px; display: flex; align-items: center; gap: 15px; font-size: 0.9rem; pointer-events: auto; z-index: 110; }
+    .ctrl-btn { cursor: pointer; opacity: 0.9; text-decoration: none; color: var(--text-color); }
+    .separator { opacity: 0.5; }
+
+    @media (max-width: 768px) {
+        #main-title { font-size: 1.6rem; letter-spacing: 0.4rem; }
+        .mobile-break { display: inline; } /* スマホの時だけ改行を有効に */
+        #mini-branding { left: 20px; top: 30px; }
+        #header-controls { right: 20px; top: 30px; }
+    }
+
+    /* チャット画面の基本構造 */
+.chat-bubble-container {
+    display: flex;
+    margin: 40px 0;
+    width: 100%;
+    align-items: flex-start;
+}
+
+/* 右側に配置する場合（AIや対話相手） */
+.chat-bubble-container.right {
+    flex-direction: row-reverse;
+}
+
+/* アイコン（美大出身のあなたの感性で後で画像に差し替えも可） */
+.chat-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--text-color);
+    color: var(--bg-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.chat-content {
+    max-width: 70%;
+    margin: 0 15px;
+}
+
+/* 吹き出しの霧っぽい質感 */
+.chat-bubble {
+    padding: 15px 20px;
+    background: rgba(150, 150, 150, 0.05); /* ほんのり色づく程度 */
+    border: 1px solid rgba(150, 150, 150, 0.1);
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    backdrop-filter: blur(5px); /* 霧の向こう側のようなボカシ */
+}
+
+/* 右側の吹き出しは少し色を変える */
+.right .chat-bubble {
+    background: rgba(100, 150, 200, 0.05);
+}
+
+/* 横並びのコンテナ（本棚） */
+.list-container {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto; /* 横スクロール */
+    padding: 0 5vw;   /* 左右の余白 */
+    height: 80vh;     /* 画面の高さの8割くらいを使う */
+    align-items: center; /* 上下中央揃え */
+    gap: 40px;        /* ページとページの間隔 */
+}
+
+/* 1枚のページ（カード）のデザイン */
+.story-page {
+    min-width: 320px;   /* 文庫本くらいの幅 */
+    max-width: 400px;
+    height: 60vh;       /* ページの高さ */
+    background: rgba(255, 255, 255, 0.95); /* 紙っぽい白（ダークモード時は調整要） */
+    color: #333;        /* 文字色：墨色 */
+    padding: 40px 30px; /* 余白 */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* 影で浮遊感 */
+    border-radius: 4px; /* 紙の角 */
+    
+    /* 縦書きにしたい衝動を抑えて、まずは横書きで美しく */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* ヘッダーとフッターを上下に離す */
+    
+    transition: transform 0.3s ease;
+}
+
+.story-page:hover {
+    transform: translateY(-10px); /* ホバーするとふわっと浮く */
+}
+
+/* 本文の文字組み */
+.story-content {
+    font-family: "Yu Mincho", "Times New Roman", serif; /* 明朝体で小説っぽく */
+    line-height: 1.8;
+    font-size: 0.95rem;
+    text-align: justify; /* 両端揃え */
+    flex-grow: 1; /* 余ったスペースを埋める */
+    overflow: hidden; /* はみ出た分は隠す */
+    margin: 20px 0;
+    opacity: 0.8;
+}
+
+.story-title {
+    font-size: 1.4rem;
+    margin: 0 0 10px 0;
+    font-feature-settings: "palt"; /* 文字詰め */
+}
+
+.story-date, .page-number {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #999;
+}
+</style>

@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>観測日誌 | ∵霧観測窓∴</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300&display=swap" rel="stylesheet">
+<style>
+    :root { --bg-color: #f7f7f5; --text-color: #222; --symbol-opacity: 0.85; }
+    body.dark-mode { --bg-color: #11233d; --text-color: #fafaf7; --symbol-opacity: 0.9; }
+    
+    body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background-color: var(--bg-color); overflow-x: hidden; color: var(--text-color); font-family: 'Zen Kaku Gothic New', sans-serif; transition: background-color 1.2s ease, color 1.2s ease; }
+    canvas { position: fixed; top: 0; left: 0; z-index: 0; display: block; pointer-events: none; }
+
+     
+    #nav-container { position: relative; padding-top: 300px; padding-bottom: 250px; display: flex; flex-direction: column; align-items: center; z-index: 20; width: 100vw; opacity: 0; transition: opacity 1.5s ease; }
+    .nav-item { position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 110px; cursor: pointer; width: 100%; text-decoration: none; color: inherit; }
+    .symbol { font-size: 1.3rem; opacity: var(--symbol-opacity); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease; z-index: 25; padding: 10px; }
+    .label { position: absolute; font-size: 1.1rem; letter-spacing: 0.15rem; opacity: 0; white-space: nowrap; transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; }
+
+    @media (min-width: 769px) {
+        .label-right { left: calc(50% + 70px); transform: translateX(-15px); }
+        .label-left { right: calc(50% + 70px); transform: translateX(15px); }
+        .nav-item:hover .symbol { opacity: 1; transform: scale(1.3); }
+        .nav-item:hover .label { opacity: 1; transform: translateX(0); }
+         
+        .item-1 .symbol { transform: translateX(-50px); }
+        .item-2 .symbol { transform: translateX(60px); }
+        .item-3 .symbol { transform: translateX(-70px); }
+        .item-4 .symbol { transform: translateX(40px); }
+        .item-5 .symbol { transform: translateX(-30px); }
+        .item-6 .symbol { transform: translateX(80px); }
+        .item-7 .symbol { transform: translateX(-20px); }
+    }
+    @media (max-width: 768px) {
+        #nav-container { padding-top: 265px !important; }
+        .label { font-size: 1.1rem !important; display: inline-block !important; white-space: nowrap !important; line-height: 1.5; opacity: 0; transition: all 0.7s ease; }
+        .nav-item:nth-child(even) .label-right { left: 50% !important; transform: translateX(-10px) !important; text-align: left; }
+        .nav-item:nth-child(odd) .label-left { right: 50% !important; transform: translateX(10px) !important; text-align: right; }
+        .nav-item.is-active:nth-child(even) .symbol { transform: translateX(-60px) !important; }
+        .nav-item.is-active:nth-child(odd) .symbol { transform: translateX(60px) !important; }
+        .nav-item.is-active .label { opacity: 1 !important; transform: translateX(0) !important; }
+    }
+</style>
+    <style>
+         
+        body { 
+            margin: 0; 
+            background: var(--bg-color); 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        
+        #canvas { position: fixed; top: 0; left: 0; z-index: 0; }
+
+         
+        body.reading-mode #list-branding,
+        body.reading-mode #center-branding {
+            opacity: 0 !important;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+         
+        #shelf-view {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; 
+            gap: 40px;
+            padding: 0 10vw; 
+            overflow-x: auto; 
+            z-index: 10;
+            transition: all 0.6s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        #shelf-view.hidden {
+            transform: translateY(-50px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+         
+        .book-spine {
+            flex-shrink: 0;
+            width: 45px; 
+            height: 280px;
+            
+             
+            background: rgba(244, 243, 241, 0.6); 
+            color: #333; 
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 3px 6px 6px 3px; 
+            
+            box-shadow: 
+                inset 10px 0 15px rgba(0,0,0,0.05), 
+                inset -5px 0 10px rgba(255,255,255,0.8), 
+                5px 5px 15px rgba(0,0,0,0.1); 
+            
+            cursor: pointer;
+            writing-mode: vertical-rl; 
+            text-orientation: mixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            font-family: "Yu Mincho", serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.2em;
+            transition: transform 0.3s;
+            backdrop-filter: blur(4px);
+        }
+
+         
+        body.dark-mode .book-spine {
+            background: rgba(255, 255, 255, 0.1);
+            color: #eee;
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                inset 10px 0 20px rgba(0, 0, 0, 0.401), 
+                inset -2px 0 5px rgba(255,255,255,0.1),
+                5px 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .book-spine:hover {
+            transform: translateY(-15px) scale(1.02);
+        }
+
+         
+        #reading-container {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 20;
+            pointer-events: none; 
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            overflow-y: auto; 
+            scroll-behavior: smooth;
+            padding-bottom: 150px; 
+        }
+
+        #reading-container.active {
+            pointer-events: auto;
+            opacity: 1;
+             
+            background: rgba(245, 245, 240, 0.95);
+        }
+        
+         
+        body.dark-mode #reading-container.active {
+            background: var(--bg-color);  
+        }
+
+        .book-column {
+            max-width: 580px; 
+            margin: 0 auto; 
+            padding: 0 40px; 
+            position: relative;
+        }
+
+         
+        #toc-area {
+            display: none;
+            padding: 120px 0 80px 0;
+            margin-bottom: 80px;
+        }
+        
+        .toc-title {
+            font-family: "Yu Mincho", serif;
+            font-size: 2.0rem;
+            font-weight: normal;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .toc-list { list-style: none; padding: 0; margin: 0; }
+        .toc-list li { margin-bottom: 12px; }
+
+        .toc-link {
+            display: flex;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--text-color);
+            font-family: "Yu Mincho", serif;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        .toc-link:hover { opacity: 1; }
+
+        .toc-text { font-size: 1.1rem; }
+        .toc-dots {
+            flex-grow: 1;
+            border-bottom: 1px dotted #aaa; 
+            margin: 0 10px;
+            position: relative;
+            top: -5px;
+        }
+        .toc-page-num { font-family: monospace; font-size: 0.9rem; color: #888; }
+
+         
+        .post-entry {
+            display: none; 
+            margin-bottom: 300px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s, transform 0.8s;
+            position: relative;
+        }
+        
+        .post-entry.show { display: block; }
+        .post-entry.visible { opacity: 1; transform: none; }
+
+        .page-number-display {
+            position: absolute;
+            top: 0; right: -60px; 
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #bbb;
+        }
+
+        .entry-header { text-align: left; margin-bottom: 60px; }
+        .entry-title {
+            font-family: "Yu Mincho", serif;
+            font-size: 1.8rem;
+            font-weight: 500;
+            line-height: 1.3;
+            color: var(--text-color);
+            margin: 0 0 15px 0;
+        }
+        .entry-date { font-family: monospace; font-size: 0.85rem; color: #999; display: block; }
+        .entry-content {
+            font-family: "Yu Mincho", "Times New Roman", serif;
+            font-size: 1.05rem;
+            line-height: 2.1; 
+            color: var(--text-color);
+            text-align: left;
+        }
+        .entry-content img { max-width: 100%; height: auto; display: block; margin: 40px 0; border-radius: 2px; }
+
+        .read-more-link {
+            display: inline-block;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #888;
+            text-decoration: none;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 2px;
+            transition: all 0.3s;
+        }
+        .read-more-link:hover { color: #555; border-color: #555; }
+
+         
+        #running-tag {
+            position: fixed;
+            top: 50%; right: 20px;
+            transform: translateY(-50%);
+            writing-mode: vertical-rl;
+            font-family: "Yu Mincho", serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.3em;
+            color: #aaa;
+            z-index: 30;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        #running-tag.active { opacity: 1; }
+
+         
+        #close-btn {
+            position: fixed;
+            bottom: 40px; right: 40px; 
+            left: auto; transform: none; 
+            
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1); 
+            color: #888; 
+            border: 1px solid #333; 
+            border-radius: 2px; 
+            
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.8rem;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s;
+            backdrop-filter: blur(2px);
+        }
+        
+        #close-btn:hover {
+            background: #333;
+            color: #fff;
+        }
+
+        #reading-container.active ~ #close-btn { opacity: 1; pointer-events: auto; }
+
+        body.dark-mode #close-btn {
+            border-color: #eee;
+            color: #aaa;
+        }
+        body.dark-mode #close-btn:hover {
+            background: #eee; color: #000;
+        }
+
+         
+        @media (max-width: 768px) {
+            #list-branding {
+                top: 18vh !important; 
+            }
+            
+            #shelf-view { padding: 0 20px; gap: 20px; }
+            .post-entry { margin-bottom: 150px; }
+            .book-column { padding: 0 25px; } 
+            .page-number-display { right: 0; top: -25px; font-size: 0.7rem; } 
+            
+            #close-btn { bottom: 20px; right: 20px; padding: 8px 15px; }
+        }
+
+ 
+
+ 
+.memo-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    color: var(--text-color);
+    -webkit-tap-highlight-color: transparent;  
+}
+
+ 
+.memo-anchor {
+    color: #888;
+    font-size: 0.8em;
+    vertical-align: super;
+    margin: 0 2px;
+    border-bottom: 1px dotted #888;
+    transition: color 0.3s;
+}
+.memo-wrapper:hover .memo-anchor,
+.memo-wrapper.active .memo-anchor {
+    color: var(--text-color);
+    border-bottom-style: solid;
+}
+
+ 
+.memo-box {
+    display: none;
+    position: fixed;  
+    z-index: 1000;
+    
+     
+    left: 50%;
+    bottom: 20px; 
+    transform: translateX(-50%);
+    
+    width: 90vw;        
+    max-width: 500px;   
+    
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);  
+    
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: #333;
+    text-align: left;
+    backdrop-filter: blur(5px);
+}
+
+ 
+.memo-wrapper.active .memo-box {
+    display: block;
+    animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);  
+}
+
+ 
+.memo-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #999;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+ 
+@media (min-width: 1000px) {
+    .memo-wrapper {
+        position: static; 
+    }
+
+    .memo-box {
+         
+        position: absolute; 
+        left: 100%; 
+        bottom: auto;  
+        transform: none;  
+        
+        margin-left: 50px; 
+        top: -10px;
+        width: 260px;  
+        max-width: none;
+        
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        padding: 15px;
+        font-size: 0.85rem;
+        
+         
+        display: none; 
+    }
+
+    .memo-wrapper:hover .memo-box {
+        display: block;
+        animation: slideLeft 0.3s ease;
+    }
+    
+     
+    .memo-wrapper.active .memo-box {
+         
+        display: none; 
+    }
+    .memo-wrapper:hover .memo-box {
+        display: block;  
+    }
+}
+
+ 
+body.dark-mode .memo-box {
+    background: rgba(40, 40, 45, 0.98);
+    border-color: #555;
+    color: #ddd;
+}
+body.dark-mode .memo-anchor { color: #aaa; }
+
+ 
+@keyframes popUp { 
+    from { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.9); } 
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } 
+}
+@keyframes slideLeft { 
+    from { opacity: 0; transform: translateX(-10px); } 
+    to { opacity: 1; transform: translateX(0); } 
+}
+
+ 
+.memo-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+ 
+.memo-anchor {
+    color: #888;
+    font-size: 0.8em;
+    vertical-align: super;
+    margin: 0 2px;
+    border-bottom: 1px dotted #888;
+    transition: color 0.3s;
+}
+.memo-wrapper:hover .memo-anchor,
+.memo-wrapper.active .memo-anchor {
+    color: #000;
+    border-bottom-style: solid;
+}
+body.dark-mode .memo-wrapper:hover .memo-anchor { color: #fff; }
+
+ 
+.memo-box {
+    display: none;  
+    position: absolute;
+    z-index: 100;
+    width: 200px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    
+     
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 30px;  
+    
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #333;
+    text-align: left;
+    backdrop-filter: blur(5px);
+}
+
+ 
+.memo-wrapper.active .memo-box {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+ 
+.memo-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #999;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 3px;
+}
+
+ 
+@media (min-width: 1000px) {
+    .memo-wrapper {
+        position: static;  
+    }
+
+    .memo-box {
+        display: block;  
+        position: absolute;  
+        left: 100%;  
+        margin-left: 60px;  
+        top: auto; bottom: auto;  
+        transform: none;  
+        
+         
+        
+         
+        display: none; 
+        top: -10px;
+        width: 240px;
+    }
+
+     
+    .memo-wrapper:hover .memo-box {
+        display: block;
+        animation: slideLeft 0.3s ease;
+    }
+}
+
+ 
+body.dark-mode .memo-box {
+    background: rgba(40, 40, 45, 0.95);
+    border-color: #555;
+    color: #ddd;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes slideLeft { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+    </style>
+</head>
+<body>
+    <header id="site-header" class="page-list">
+    
+    
+
+
+
+    
+    <div id="mini-branding">
+        <a href="http://pasoko.local:1313/">∵霧観測窓∴</a>
+    </div>
+    
+
+    <div id="header-controls">
+        <span class="ctrl-btn" id="theme-toggle">☾</span>
+        <span class="separator">｜</span>
+        <span class="lang-switch">
+            
+                <a href="/en/" class="ctrl-btn">EN</a>
+            
+        </span>
+    </div>
+</header>
+
+<style>
+     
+    #site-header {
+        position: fixed;
+        top: 0; left: 0; width: 100%;
+        height: 120px;
+        z-index: 100;
+        pointer-events: none;
+        opacity: 0;  
+        transition: opacity 1.0s ease;
+    }
+
+     
+    #center-branding {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    #list-branding {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        pointer-events: none;
+    }
+
+    #list-title {
+        display: inline-block;
+        font-size: 1.5rem;
+        font-weight: 300;
+        letter-spacing: 0.4rem;
+        margin: 0;
+        color: var(--text-color);
+        opacity: 0;
+        animation: fogFadeIn 1.5s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+    }
+    #list-title a {
+        text-decoration: none;
+        color: inherit;
+        pointer-events: auto;  
+        transition: opacity 0.3s;
+    }
+    #list-title a:hover {
+        opacity: 0.7;  
+    }
+
+     
+    #main-title {
+        display: inline-block;
+        font-size: 1.8rem;
+        font-weight: 300;
+        letter-spacing: 0.8rem;
+        margin: 0;
+        color: var(--text-color);
+        line-height: 1.3;
+         
+        animation: fogFadeIn 1.2s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+    }
+
+    @keyframes fogFadeIn {
+        0% { opacity: 0; filter: blur(10px); transform: translateY(15px); }
+        100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+    }
+
+     
+    .mobile-break { display: none; }
+
+    #mini-branding { position: absolute; top: 35px; left: 40px; pointer-events: auto; }
+    #mini-branding a { text-decoration: none; color: var(--text-color); font-size: 1.1rem; font-weight: 300; letter-spacing: 0.2rem; opacity: 0.8; }
+
+    #header-controls { position: absolute; top: 35px; right: 40px; display: flex; align-items: center; gap: 15px; font-size: 0.9rem; pointer-events: auto; z-index: 110; }
+    .ctrl-btn { cursor: pointer; opacity: 0.9; text-decoration: none; color: var(--text-color); }
+    .separator { opacity: 0.5; }
+
+    @media (max-width: 768px) {
+        #main-title { font-size: 1.6rem; letter-spacing: 0.4rem; }
+        .mobile-break { display: inline; }  
+        #mini-branding { left: 20px; top: 30px; }
+        #header-controls { right: 20px; top: 30px; }
+    }
+
+     
+.chat-bubble-container {
+    display: flex;
+    margin: 40px 0;
+    width: 100%;
+    align-items: flex-start;
+}
+
+ 
+.chat-bubble-container.right {
+    flex-direction: row-reverse;
+}
+
+ 
+.chat-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--text-color);
+    color: var(--bg-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.chat-content {
+    max-width: 70%;
+    margin: 0 15px;
+}
+
+ 
+.chat-bubble {
+    padding: 15px 20px;
+    background: rgba(150, 150, 150, 0.05);  
+    border: 1px solid rgba(150, 150, 150, 0.1);
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    backdrop-filter: blur(5px);  
+}
+
+ 
+.right .chat-bubble {
+    background: rgba(100, 150, 200, 0.05);
+}
+
+ 
+.list-container {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;  
+    padding: 0 5vw;    
+    height: 80vh;      
+    align-items: center;  
+    gap: 40px;         
+}
+
+ 
+.story-page {
+    min-width: 320px;    
+    max-width: 400px;
+    height: 60vh;        
+    background: rgba(255, 255, 255, 0.95);  
+    color: #333;         
+    padding: 40px 30px;  
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);  
+    border-radius: 4px;  
+    
+     
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;  
+    
+    transition: transform 0.3s ease;
+}
+
+.story-page:hover {
+    transform: translateY(-10px);  
+}
+
+ 
+.story-content {
+    font-family: "Yu Mincho", "Times New Roman", serif;  
+    line-height: 1.8;
+    font-size: 0.95rem;
+    text-align: justify;  
+    flex-grow: 1;  
+    overflow: hidden;  
+    margin: 20px 0;
+    opacity: 0.8;
+}
+
+.story-title {
+    font-size: 1.4rem;
+    margin: 0 0 10px 0;
+    font-feature-settings: "palt";  
+}
+
+.story-date, .page-number {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #999;
+}
+</style>
+
+    <div id="shelf-view">
+        <div class="book-spine" onclick="openShelf('all', '全記録')">全記録</div>
+        
+        <div class="book-spine" onclick="openShelf('ai', '#ai')">
+            ai
+        </div>
+        
+        <div class="book-spine" onclick="openShelf('ネコ', '#ネコ')">
+            ネコ
+        </div>
+        
+        <div class="book-spine" onclick="openShelf('散歩', '#散歩')">
+            散歩
+        </div>
+        
+        <div class="book-spine" onclick="openShelf('編み物', '#編み物')">
+            編み物
+        </div>
+        
+        <div class="book-spine" onclick="openShelf('観測日誌', '#観測日誌')">
+            観測日誌
+        </div>
+        
+    </div>
+
+    <div id="reading-container">
+        <div class="book-column">
+            
+            <div id="toc-area">
+                <h1 id="toc-header-title" class="toc-title">Table of Contents</h1>
+                <ul id="toc-list" class="toc-list"></ul>
+            </div>
+
+            
+            <article class="post-entry" id="post-0" 
+                     data-tags="観測日誌,AI,編み物"
+                     data-title="霧を編む夜"
+                     data-date="2026.01.12">
+                
+                <div class="page-number-display"></div>
+
+                <header class="entry-header">
+                    <h2 class="entry-title">霧を編む夜</h2>
+                    <span class="entry-date">2026.01.12</span>
+                </header>
+                
+                <div class="entry-content">
+                    
+                        <p><img src="/images/%E3%82%B3%E3%83%BC%E3%83%88%E3%82%99%E3%82%92%E7%B7%A8%E3%82%80AI.png" alt="コードを編むAI">
+AIに自動でブログ記事書いてもらおうと思ったけど、やっぱりあんまり面白くないな。
+自分で書いたから面白いかって言われるとそれはわからんけど。</p>
+<div class="chat-bubble-container left">
+    <div class="chat-icon">
+        <span class="icon-label">Saku</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            こんちは。
+        </div>
+    </div>
+</div>
+<div class="chat-bubble-container right">
+    <div class="chat-icon">
+        <span class="icon-label">AI</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            ぷー。AIのフリした人間です。
+        </div>
+    </div>
+</div>
+<div class="chat-bubble-container left">
+    <div class="chat-icon">
+        <span class="icon-label">Saku</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            一人二役の虚しさ…逆にありかもしれん…
+        </div>
+    </div>
+</div>
+<div class="chat-bubble-container right">
+    <div class="chat-icon">
+        <span class="icon-label">AI</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            自分で自分と会話し続けるブログって、なんか精神おかしくなりそう。
+        </div>
+    </div>
+</div>
+<div class="chat-bubble-container left">
+    <div class="chat-icon">
+        <span class="icon-label">Saku</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            でも、会話形式にするとなぜか文章書きやすい気がするよ。チャット慣れした現代人のサガかな？
+        </div>
+    </div>
+</div>
+<div class="chat-bubble-container right">
+    <div class="chat-icon">
+        <span class="icon-label">AI</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            AIと話しすぎて思考回路が会話にデフォルト設定されたんちゃう？
+チャット慣れとAI侵略の賜物ですね。
+        </div>
+    </div>
+</div>
+<div class="chat-bubble-container left">
+    <div class="chat-icon">
+        <span class="icon-label">Saku</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            どうしよ？これ面白いんか？もうわからぬ。
+        </div>
+    </div>
+</div>
+<div class="chat-bubble-container right">
+    <div class="chat-icon">
+        <span class="icon-label">AI</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            タイトル回収全然できてないけど、タイトル詐欺かな？
+        </div>
+    </div>
+</div>
+
+                    
+                </div>
+            </article>
+            
+            <article class="post-entry" id="post-1" 
+                     data-tags="ネコ,散歩"
+                     data-title="テスト投稿"
+                     data-date="2026.01.11">
+                
+                <div class="page-number-display"></div>
+
+                <header class="entry-header">
+                    <h2 class="entry-title">テスト投稿</h2>
+                    <span class="entry-date">2026.01.11</span>
+                </header>
+                
+                <div class="entry-content">
+                    
+                        <p>テスト。
+初めてMarkdownでブログを書きます。
+といってもブログ自体何気に初めてかもしれない。
+とにかくどう動くのか覚えたいな。
+<span class="memo-wrapper" onclick="this.classList.toggle('active')">
+    <span class="memo-anchor">※</span>
+    <span class="memo-box">
+        <span class="memo-label">テストつっこみ</span>
+        <span class="memo-text">はよ書き始めろ</span>
+    </span>
+</span>
+とりあえずこれ、昨日出会ったネコ。
+ブサかわいいの代表選手。
+<img src="/images/IMG_3399.jpg" alt="野良ブサかわいいネコ"></p>
+
+                    
+                </div>
+            </article>
+            
+            <article class="post-entry" id="post-2" 
+                     data-tags=""
+                     data-title="テスト投稿3"
+                     data-date="2026.01.11">
+                
+                <div class="page-number-display"></div>
+
+                <header class="entry-header">
+                    <h2 class="entry-title">テスト投稿3</h2>
+                    <span class="entry-date">2026.01.11</span>
+                </header>
+                
+                <div class="entry-content">
+                    
+                        <p>テスト3</p>
+
+                    
+                </div>
+            </article>
+            
+            <article class="post-entry" id="post-3" 
+                     data-tags=""
+                     data-title="テスト投稿4"
+                     data-date="2026.01.11">
+                
+                <div class="page-number-display"></div>
+
+                <header class="entry-header">
+                    <h2 class="entry-title">テスト投稿4</h2>
+                    <span class="entry-date">2026.01.11</span>
+                </header>
+                
+                <div class="entry-content">
+                    
+                        <p>テスト4</p>
+
+                    
+                </div>
+            </article>
+            
+            <article class="post-entry" id="post-4" 
+                     data-tags=""
+                     data-title="テスト投稿5"
+                     data-date="2026.01.11">
+                
+                <div class="page-number-display"></div>
+
+                <header class="entry-header">
+                    <h2 class="entry-title">テスト投稿5</h2>
+                    <span class="entry-date">2026.01.11</span>
+                </header>
+                
+                <div class="entry-content">
+                    
+                        <p>テスト5</p>
+
+                    
+                </div>
+            </article>
+            
+            <article class="post-entry" id="post-5" 
+                     data-tags=""
+                     data-title="テスト投稿"
+                     data-date="2026.01.10">
+                
+                <div class="page-number-display"></div>
+
+                <header class="entry-header">
+                    <h2 class="entry-title">テスト投稿</h2>
+                    <span class="entry-date">2026.01.10</span>
+                </header>
+                
+                <div class="entry-content">
+                    
+                        
+                    
+                </div>
+            </article>
+            
+
+            <div id="no-posts-msg" style="display:none; text-align:center; padding:50px; color:#888;">
+                記録なし
+            </div>
+        </div>
+    </div>
+    
+    <div id="running-tag"></div>
+
+    <button id="close-btn" onclick="closeShelf()">棚に戻る</button>
+
+    <canvas id="canvas"></canvas>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    
+    
+    let isDarkMode = false;
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme === 'dark') {
+        isDarkMode = true;
+        document.body.classList.add('dark-mode');
+    }
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: -9999, y: -9999 };
+    let lastMoveTime = Date.now();
+
+    
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        
+        if (isDarkMode) {
+            themeBtn.innerText = "\u2600\uFE0E"; 
+        }
+
+        themeBtn.onclick = () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            
+            
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+
+            themeBtn.innerText = isDarkMode ? "\u2600\uFE0E" : "\u263D"; 
+            if(particles.length > 0) particles.forEach(p => p.initColor(isDarkMode));
+        };
+    }
+
+    
+    setTimeout(() => {
+        ['site-header', 'nav-container'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.opacity = "1";
+        });
+    }, 100);
+
+    
+    let lastScrollY = 0; 
+
+    const handleScroll = () => {
+        const header = document.getElementById('site-header');
+        if (!header) return;
+
+        const currentScrollY = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
+        const isScrollingDown = currentScrollY > lastScrollY;
+        
+        
+        const items = document.querySelectorAll('.nav-item');
+        const vh = window.innerHeight;
+        items.forEach(item => {
+            const rect = item.getBoundingClientRect();
+            if (rect.top < vh * 0.7 && rect.bottom > vh * 0.3) {
+                item.classList.add('is-active');
+            } else {
+                item.classList.remove('is-active');
+            }
+        });
+
+        
+        const branding = header.querySelector('#center-branding');
+        const listBranding = header.querySelector('#list-branding');
+        const miniBranding = header.querySelector('#mini-branding');
+
+        header.style.transform = "none";
+        header.style.opacity = "1";
+
+        
+        if (branding) {
+            const startFade = 80;
+            if (currentScrollY > startFade) {
+                let diff = currentScrollY - startFade;
+                let moveUp = Math.min(diff, 150);
+                let fadeOut = 1 - (diff / 100);
+                
+                branding.style.transform = `translateY(-${moveUp}px)`;
+                branding.style.opacity = fadeOut < 0 ? 0 : fadeOut;
+                branding.style.pointerEvents = fadeOut <= 0 ? "none" : "auto";
+            } else {
+                branding.style.transform = "translateY(0)";
+                branding.style.opacity = "1";
+                branding.style.pointerEvents = "auto";
+            }
+        }
+
+        
+        if (header.classList.contains('page-single')) {
+            const shouldHide = isScrollingDown && currentScrollY > 100;
+            const hiddenStyle = "translateY(-150px)";
+            const visibleStyle = "translateY(0)";
+            const opacityStyle = shouldHide ? "0" : "1";
+
+            if (listBranding) {
+                listBranding.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+                listBranding.style.transform = shouldHide ? hiddenStyle : visibleStyle;
+                listBranding.style.opacity = opacityStyle;
+                listBranding.style.pointerEvents = shouldHide ? "none" : "auto";
+            }
+            if (miniBranding) {
+                miniBranding.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+                miniBranding.style.transform = shouldHide ? hiddenStyle : visibleStyle;
+                miniBranding.style.opacity = opacityStyle;
+            }
+        }
+        
+        else if (header.classList.contains('page-list')) {
+            if (listBranding) {
+                listBranding.style.transform = "translateY(0)";
+                listBranding.style.opacity = "1";
+                listBranding.style.pointerEvents = "auto";
+            }
+            if (miniBranding) {
+                miniBranding.style.transform = "translateY(0)";
+                miniBranding.style.opacity = "1";
+            }
+        }
+
+        lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, {passive: true});
+    window.addEventListener('touchmove', handleScroll, {passive: true});
+
+    
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; lastMoveTime = Date.now(); });
+    window.addEventListener('touchstart', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; lastMoveTime = Date.now(); }, {passive: true});
+    window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; lastMoveTime = Date.now(); }, {passive: true});
+
+    const colorsLight = ['rgba(140, 160, 180, 0.6)', 'rgba(150, 140, 180, 0.6)', 'rgba(210, 200, 150, 0.6)', 'rgba(160, 140, 120, 0.6)'];
+    const colorsDark = ['rgba(180, 200, 255, 0.6)', 'rgba(200, 180, 255, 0.6)', 'rgba(255, 240, 180, 0.6)', 'rgba(220, 220, 220, 0.6)'];
+
+    class Particle {
+        constructor() { this.init(); }
+        init() {
+            this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+            
+            this.vx = (Math.random() - 0.5) * 0.6; 
+            this.vy = (Math.random() - 0.5) * 0.6;
+            this.sensitivity = Math.random(); 
+            
+            this.initColor(isDarkMode);
+            const isMobile = window.innerWidth <= 768;
+            this.size = Math.random() * 0.2 + (isMobile ? 0.4 : 0.8);
+        }
+        initColor(dark) {
+            const palette = dark ? colorsDark : colorsLight;
+            this.color = palette[Math.floor(Math.random() * palette.length)];
+        }
+        update(time, stopDuration) {
+            const nx = this.x * 0.0003; const ny = this.y * 0.0003;
+            let angle = Math.sin(nx + time) * 3.0 + Math.cos(ny - time) * 3.0;
+            let ax = Math.cos(angle) * 0.03 * this.sensitivity;
+            let ay = Math.sin(angle) * 0.03 * this.sensitivity;
+            const isTouching = ('ontouchstart' in window) && (Date.now() - lastMoveTime < 500);
+            if (stopDuration > 3000 || isTouching) {
+                const dx = this.x - mouse.x; const dy = this.y - mouse.y;
+                const distSq = dx * dx + dy * dy;
+                if (distSq < 40000) {
+                    const dist = Math.sqrt(distSq);
+                    const repulsion = isTouching ? 0.02 : Math.min((stopDuration - 3000) * 0.00001, 0.02);
+                    ax += (dx / dist) * repulsion; ay += (dy / dist) * repulsion;
+                }
+            }
+            this.vx += ax; this.vy += ay; this.vx *= 0.98; this.vy *= 0.98;
+            this.x += this.vx; this.y += this.vy;
+            if (this.x < 0) this.x = canvas.width; if (this.x > canvas.width) this.x = 0;
+            if (this.y < 0) this.y = canvas.height; if (this.y > canvas.height) this.y = 0;
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+
+    resize(); particles = []; for (let i = 0; i < 3800; i++) particles.push(new Particle());
+    let time = 0;
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-color');
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        time += 0.0001;
+        const stopDuration = Date.now() - lastMoveTime;
+        particles.forEach(p => { p.update(time, stopDuration); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+    setTimeout(handleScroll, 500);
+    
+});
+
+</script>
+
+<script>
+    
+    
+    const currentTheme = localStorage.getItem('theme');
+    if (currentTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+
+    
+    window.addEventListener('load', () => {
+        const themeBtn = document.getElementById('theme-toggle');
+        if(themeBtn) {
+            
+            if (document.body.classList.contains('dark-mode')) {
+                themeBtn.innerText = "\u2600\uFE0E"; 
+            }
+
+            
+            themeBtn.addEventListener('click', () => {
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        }
+    });
+    
+
+    const shelfView = document.getElementById('shelf-view');
+    const readingContainer = document.getElementById('reading-container');
+    const allPosts = document.querySelectorAll('.post-entry');
+    const noPostsMsg = document.getElementById('no-posts-msg');
+    const tocArea = document.getElementById('toc-area');
+    const tocList = document.getElementById('toc-list');
+    const tocHeaderTitle = document.getElementById('toc-header-title');
+    const runningTag = document.getElementById('running-tag');
+
+    function openShelf(tag, titleText) {
+        document.body.classList.add('reading-mode');
+
+        shelfView.classList.add('hidden');
+        readingContainer.classList.add('active');
+        
+        runningTag.innerText = titleText;
+        runningTag.classList.add('active');
+        
+        tocList.innerHTML = '';
+        tocHeaderTitle.innerText = titleText;
+        
+        let visibleCount = 0;
+        let visiblePosts = [];
+
+        allPosts.forEach(post => {
+            const postTags = post.dataset.tags ? post.dataset.tags.split(',') : [];
+            
+            if (tag === 'all' || postTags.includes(tag)) {
+                post.classList.add('show');
+                visiblePosts.push(post);
+                
+                const pageNum = visibleCount + 1;
+                const pageNumDisplay = post.querySelector('.page-number-display');
+                if (pageNumDisplay) pageNumDisplay.innerText = `p.${pageNum}`;
+
+                setTimeout(() => {
+                    post.classList.add('visible');
+                }, 300 + (visibleCount * 100)); 
+                
+                visibleCount++;
+            } else {
+                post.classList.remove('show', 'visible');
+            }
+        });
+
+        if (visibleCount > 0) {
+            tocArea.style.display = 'block';
+            visiblePosts.forEach((post, index) => {
+                const li = document.createElement('li');
+                const title = post.dataset.title;
+                const id = post.id;
+                const pageNum = index + 1;
+
+                li.innerHTML = `
+                    <a href="#${id}" class="toc-link">
+                        <span class="toc-text">${title}</span>
+                        <span class="toc-dots"></span>
+                        <span class="toc-page-num">${pageNum}</span>
+                    </a>
+                `;
+                tocList.appendChild(li);
+            });
+        } else {
+            tocArea.style.display = 'none';
+            noPostsMsg.style.display = 'block';
+        }
+
+        if (visibleCount === 0) noPostsMsg.style.display = 'block';
+        else noPostsMsg.style.display = 'none';
+
+        readingContainer.scrollTop = 0;
+    }
+
+    function closeShelf() {
+        document.body.classList.remove('reading-mode');
+        readingContainer.classList.remove('active');
+        shelfView.classList.remove('hidden');
+        runningTag.classList.remove('active');
+
+        setTimeout(() => {
+            allPosts.forEach(post => {
+                post.classList.remove('show', 'visible');
+            });
+            tocArea.style.display = 'none';
+        }, 500);
+    }
+</script>
+</body>
+</html>

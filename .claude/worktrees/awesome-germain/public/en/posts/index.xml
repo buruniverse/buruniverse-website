@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cloud Sea Shelf on ∵ Fog &lt;br class=&#39;mobile-break&#39;&gt;Observation &lt;br class=&#39;mobile-break&#39;&gt;Portal ∴</title>
+    <link>http://pasoko.local:1313/en/posts/</link>
+    <description>Recent content in Cloud Sea Shelf on ∵ Fog &lt;br class=&#39;mobile-break&#39;&gt;Observation &lt;br class=&#39;mobile-break&#39;&gt;Portal ∴</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 11 Jan 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://pasoko.local:1313/en/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>テスト投稿</title>
+      <link>http://pasoko.local:1313/en/posts/test-post/</link>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://pasoko.local:1313/en/posts/test-post/</guid>
+      <description>&lt;p&gt;テスト。&#xA;初めてMarkdownでブログを書きます。&#xA;といってもブログ自体何気に初めてかもしれない。&#xA;とにかくどう動くのか覚えたいな。&lt;/p&gt;&#xA;&lt;p&gt;とりあえずこれ、昨日出会ったネコ。&#xA;ブサかわいいの代表選手。&#xA;&lt;img src=&#34;http://pasoko.local:1313/images/IMG_3399.jpg&#34; alt=&#34;野良ブサかわいいネコ&#34;&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>テスト投稿2</title>
+      <link>http://pasoko.local:1313/en/posts/test-post2/</link>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://pasoko.local:1313/en/posts/test-post2/</guid>
+      <description>&lt;p&gt;テスト2&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>テスト投稿3</title>
+      <link>http://pasoko.local:1313/en/posts/test-post3/</link>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://pasoko.local:1313/en/posts/test-post3/</guid>
+      <description>&lt;p&gt;テスト3&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>テスト投稿4</title>
+      <link>http://pasoko.local:1313/en/posts/test-post4/</link>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://pasoko.local:1313/en/posts/test-post4/</guid>
+      <description>&lt;p&gt;テスト4&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>テスト投稿5</title>
+      <link>http://pasoko.local:1313/en/posts/test-post5/</link>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://pasoko.local:1313/en/posts/test-post5/</guid>
+      <description>&lt;p&gt;テスト5&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Test Post</title>
+      <link>http://pasoko.local:1313/en/posts/first-post/</link>
+      <pubDate>Sat, 10 Jan 2026 18:12:06 +0900</pubDate>
+      <guid>http://pasoko.local:1313/en/posts/first-post/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

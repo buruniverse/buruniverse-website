@@ -1,0 +1,205 @@
+<canvas id="canvas"></canvas>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    // --- ★ 1. 記憶の読み込み（一番最初にやる） ---
+    // サイトに来た瞬間「前回どうだったっけ？」と思い出す
+    let isDarkMode = false;
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme === 'dark') {
+        isDarkMode = true;
+        document.body.classList.add('dark-mode');
+    }
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: -9999, y: -9999 };
+    let lastMoveTime = Date.now();
+
+    // --- 2. テーマ切り替えボタンの動作 ---
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        // ボタンの見た目を現在のモードに合わせる
+        if (isDarkMode) {
+            themeBtn.innerText = "\u2600\uFE0E"; // 太陽（ダークモード時）
+        }
+
+        themeBtn.onclick = () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            
+            // ★ 切り替えたらすぐに記憶する
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+
+            themeBtn.innerText = isDarkMode ? "\u2600\uFE0E" : "\u263D"; 
+            if(particles.length > 0) particles.forEach(p => p.initColor(isDarkMode));
+        };
+    }
+
+    // --- 3. フェードイン ---
+    setTimeout(() => {
+        ['site-header', 'nav-container'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.opacity = "1";
+        });
+    }, 100);
+
+    // --- 4. スクロール制御 ---
+    let lastScrollY = 0; 
+
+    const handleScroll = () => {
+        const header = document.getElementById('site-header');
+        if (!header) return;
+
+        const currentScrollY = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
+        const isScrollingDown = currentScrollY > lastScrollY;
+        
+        // メニューのアクティブ判定
+        const items = document.querySelectorAll('.nav-item');
+        const vh = window.innerHeight;
+        items.forEach(item => {
+            const rect = item.getBoundingClientRect();
+            if (rect.top < vh * 0.7 && rect.bottom > vh * 0.3) {
+                item.classList.add('is-active');
+            } else {
+                item.classList.remove('is-active');
+            }
+        });
+
+        // ターゲット特定
+        const branding = header.querySelector('#center-branding');
+        const listBranding = header.querySelector('#list-branding');
+        const miniBranding = header.querySelector('#mini-branding');
+
+        header.style.transform = "none";
+        header.style.opacity = "1";
+
+        // --- A. ホーム（page-home）の動き ---
+        if (branding) {
+            const startFade = 80;
+            if (currentScrollY > startFade) {
+                let diff = currentScrollY - startFade;
+                let moveUp = Math.min(diff, 150);
+                let fadeOut = 1 - (diff / 100);
+                
+                branding.style.transform = `translateY(-${moveUp}px)`;
+                branding.style.opacity = fadeOut < 0 ? 0 : fadeOut;
+                branding.style.pointerEvents = fadeOut <= 0 ? "none" : "auto";
+            } else {
+                branding.style.transform = "translateY(0)";
+                branding.style.opacity = "1";
+                branding.style.pointerEvents = "auto";
+            }
+        }
+
+        // --- B. 記事詳細（page-single）の動き ---
+        if (header.classList.contains('page-single')) {
+            const shouldHide = isScrollingDown && currentScrollY > 100;
+            const hiddenStyle = "translateY(-150px)";
+            const visibleStyle = "translateY(0)";
+            const opacityStyle = shouldHide ? "0" : "1";
+
+            if (listBranding) {
+                listBranding.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+                listBranding.style.transform = shouldHide ? hiddenStyle : visibleStyle;
+                listBranding.style.opacity = opacityStyle;
+                listBranding.style.pointerEvents = shouldHide ? "none" : "auto";
+            }
+            if (miniBranding) {
+                miniBranding.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+                miniBranding.style.transform = shouldHide ? hiddenStyle : visibleStyle;
+                miniBranding.style.opacity = opacityStyle;
+            }
+        }
+        // --- C. 雲海棚（page-list）の動き ---
+        else if (header.classList.contains('page-list')) {
+            if (listBranding) {
+                listBranding.style.transform = "translateY(0)";
+                listBranding.style.opacity = "1";
+                listBranding.style.pointerEvents = "auto";
+            }
+            if (miniBranding) {
+                miniBranding.style.transform = "translateY(0)";
+                miniBranding.style.opacity = "1";
+            }
+        }
+
+        lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, {passive: true});
+    window.addEventListener('touchmove', handleScroll, {passive: true});
+
+    // --- 5. 粒子エンジン（設定維持） ---
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; lastMoveTime = Date.now(); });
+    window.addEventListener('touchstart', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; lastMoveTime = Date.now(); }, {passive: true});
+    window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; lastMoveTime = Date.now(); }, {passive: true});
+
+    const colorsLight = ['rgba(140, 160, 180, 0.6)', 'rgba(150, 140, 180, 0.6)', 'rgba(210, 200, 150, 0.6)', 'rgba(160, 140, 120, 0.6)'];
+    const colorsDark = ['rgba(180, 200, 255, 0.6)', 'rgba(200, 180, 255, 0.6)', 'rgba(255, 240, 180, 0.6)', 'rgba(220, 220, 220, 0.6)'];
+
+    class Particle {
+        constructor() { this.init(); }
+        init() {
+            this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+            // ★速度調整済み（0.6倍）
+            this.vx = (Math.random() - 0.5) * 0.6; 
+            this.vy = (Math.random() - 0.5) * 0.6;
+            this.sensitivity = Math.random(); 
+            // 初期化時に現在のモードの色を適用
+            this.initColor(isDarkMode);
+            const isMobile = window.innerWidth <= 768;
+            this.size = Math.random() * 0.2 + (isMobile ? 0.4 : 0.8);
+        }
+        initColor(dark) {
+            const palette = dark ? colorsDark : colorsLight;
+            this.color = palette[Math.floor(Math.random() * palette.length)];
+        }
+        update(time, stopDuration) {
+            const nx = this.x * 0.0003; const ny = this.y * 0.0003;
+            let angle = Math.sin(nx + time) * 3.0 + Math.cos(ny - time) * 3.0;
+            let ax = Math.cos(angle) * 0.03 * this.sensitivity;
+            let ay = Math.sin(angle) * 0.03 * this.sensitivity;
+            const isTouching = ('ontouchstart' in window) && (Date.now() - lastMoveTime < 500);
+            if (stopDuration > 3000 || isTouching) {
+                const dx = this.x - mouse.x; const dy = this.y - mouse.y;
+                const distSq = dx * dx + dy * dy;
+                if (distSq < 40000) {
+                    const dist = Math.sqrt(distSq);
+                    const repulsion = isTouching ? 0.02 : Math.min((stopDuration - 3000) * 0.00001, 0.02);
+                    ax += (dx / dist) * repulsion; ay += (dy / dist) * repulsion;
+                }
+            }
+            this.vx += ax; this.vy += ay; this.vx *= 0.98; this.vy *= 0.98;
+            this.x += this.vx; this.y += this.vy;
+            if (this.x < 0) this.x = canvas.width; if (this.x > canvas.width) this.x = 0;
+            if (this.y < 0) this.y = canvas.height; if (this.y > canvas.height) this.y = 0;
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+
+    resize(); particles = []; for (let i = 0; i < 3800; i++) particles.push(new Particle());
+    let time = 0;
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // 背景色の取得もCSS変数から行うので、テーマ切り替え時に即座に反映される
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-color');
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ★速度調整済み（0.0001）
+        time += 0.0001;
+        const stopDuration = Date.now() - lastMoveTime;
+        particles.forEach(p => { p.update(time, stopDuration); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+    setTimeout(handleScroll, 500);
+    
+});
+
+</script>

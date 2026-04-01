@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>テスト投稿5 | ∵ Fog &lt;br class=&#39;mobile-break&#39;&gt;Observation &lt;br class=&#39;mobile-break&#39;&gt;Portal ∴</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300&display=swap" rel="stylesheet">
+<style>
+    :root { --bg-color: #f7f7f5; --text-color: #222; --symbol-opacity: 0.85; }
+    body.dark-mode { --bg-color: #11233d; --text-color: #fafaf7; --symbol-opacity: 0.9; }
+    
+    body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background-color: var(--bg-color); overflow-x: hidden; color: var(--text-color); font-family: 'Zen Kaku Gothic New', sans-serif; transition: background-color 1.2s ease, color 1.2s ease; }
+    canvas { position: fixed; top: 0; left: 0; z-index: 0; display: block; pointer-events: none; }
+
+     
+    #nav-container { position: relative; padding-top: 300px; padding-bottom: 250px; display: flex; flex-direction: column; align-items: center; z-index: 20; width: 100vw; opacity: 0; transition: opacity 1.5s ease; }
+    .nav-item { position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 110px; cursor: pointer; width: 100%; text-decoration: none; color: inherit; }
+    .symbol { font-size: 1.3rem; opacity: var(--symbol-opacity); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease; z-index: 25; padding: 10px; }
+    .label { position: absolute; font-size: 1.1rem; letter-spacing: 0.15rem; opacity: 0; white-space: nowrap; transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; }
+
+    @media (min-width: 769px) {
+        .label-right { left: calc(50% + 70px); transform: translateX(-15px); }
+        .label-left { right: calc(50% + 70px); transform: translateX(15px); }
+        .nav-item:hover .symbol { opacity: 1; transform: scale(1.3); }
+        .nav-item:hover .label { opacity: 1; transform: translateX(0); }
+         
+        .item-1 .symbol { transform: translateX(-50px); }
+        .item-2 .symbol { transform: translateX(60px); }
+        .item-3 .symbol { transform: translateX(-70px); }
+        .item-4 .symbol { transform: translateX(40px); }
+        .item-5 .symbol { transform: translateX(-30px); }
+        .item-6 .symbol { transform: translateX(80px); }
+        .item-7 .symbol { transform: translateX(-20px); }
+    }
+    @media (max-width: 768px) {
+        #nav-container { padding-top: 265px !important; }
+        .label { font-size: 1.1rem !important; display: inline-block !important; white-space: nowrap !important; line-height: 1.5; opacity: 0; transition: all 0.7s ease; }
+        .nav-item:nth-child(even) .label-right { left: 50% !important; transform: translateX(-10px) !important; text-align: left; }
+        .nav-item:nth-child(odd) .label-left { right: 50% !important; transform: translateX(10px) !important; text-align: right; }
+        .nav-item.is-active:nth-child(even) .symbol { transform: translateX(-60px) !important; }
+        .nav-item.is-active:nth-child(odd) .symbol { transform: translateX(60px) !important; }
+        .nav-item.is-active .label { opacity: 1 !important; transform: translateX(0) !important; }
+    }
+</style>
+    <style>
+         
+        body { background: var(--bg-color); color: var(--text-color); margin: 0; }
+        
+        #post-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 180px 30px 100px;  
+            position: relative;
+            z-index: 20;  
+            line-height: 1.8;
+        }
+
+        .post-header { margin-bottom: 50px; text-align: center; }
+        .post-header h1 { font-size: 2rem; letter-spacing: 0.1rem; margin-bottom: 10px; }
+        .post-date { opacity: 0.5; font-size: 0.8rem; letter-spacing: 0.2rem; }
+
+        .post-content { font-size: 1.05rem; }
+        .post-content p { margin-bottom: 1.5em; }
+        
+         
+        .back-link {
+            display: inline-block;
+            margin-top: 50px;
+            text-decoration: none;
+            color: inherit;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            font-size: 1.0rem;
+        }
+        .back-link:hover { opacity: 1; }
+
+         
+
+        .post-content img {
+            max-width: 100%;     
+            height: auto;        
+            display: block;
+            margin: 40px auto;   
+            border-radius: 8px;  
+        }
+
+         
+        .post-content iframe, 
+        .post-content video {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <header id="site-header" class="page-single">
+    
+    
+
+
+    <div id="list-branding">
+        <h1 id="list-title">
+            <a href="/posts/">
+                CLOUD SEA SHELF
+            </a>
+        </h1>
+    </div>
+    
+
+    
+    <div id="mini-branding">
+        <a href="http://pasoko.local:1313/">∵ Fog &lt;br class=&#39;mobile-break&#39;&gt;Observation &lt;br class=&#39;mobile-break&#39;&gt;Portal ∴</a>
+    </div>
+    
+
+    <div id="header-controls">
+        <span class="ctrl-btn" id="theme-toggle">☾</span>
+        <span class="separator">｜</span>
+        <span class="lang-switch">
+            
+                
+                <a href="http://pasoko.local:1313/posts/test-post5/" class="ctrl-btn">JA</a>
+                
+            
+        </span>
+    </div>
+</header>
+
+<style>
+     
+    #site-header {
+        position: fixed;
+        top: 0; left: 0; width: 100%;
+        height: 120px;
+        z-index: 100;
+        pointer-events: none;
+        opacity: 0;  
+        transition: opacity 1.0s ease;
+    }
+
+     
+    #center-branding {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    #list-branding {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        pointer-events: none;
+    }
+
+    #list-title {
+        display: inline-block;
+        font-size: 1.5rem;
+        font-weight: 300;
+        letter-spacing: 0.4rem;
+        margin: 0;
+        color: var(--text-color);
+        opacity: 0;
+        animation: fogFadeIn 1.5s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+    }
+    #list-title a {
+        text-decoration: none;
+        color: inherit;
+        pointer-events: auto;  
+        transition: opacity 0.3s;
+    }
+    #list-title a:hover {
+        opacity: 0.7;  
+    }
+
+     
+    #main-title {
+        display: inline-block;
+        font-size: 1.8rem;
+        font-weight: 300;
+        letter-spacing: 0.8rem;
+        margin: 0;
+        color: var(--text-color);
+        line-height: 1.3;
+         
+        animation: fogFadeIn 1.2s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+    }
+
+    @keyframes fogFadeIn {
+        0% { opacity: 0; filter: blur(10px); transform: translateY(15px); }
+        100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+    }
+
+     
+    .mobile-break { display: none; }
+
+    #mini-branding { position: absolute; top: 35px; left: 40px; pointer-events: auto; }
+    #mini-branding a { text-decoration: none; color: var(--text-color); font-size: 1.1rem; font-weight: 300; letter-spacing: 0.2rem; opacity: 0.8; }
+
+    #header-controls { position: absolute; top: 35px; right: 40px; display: flex; align-items: center; gap: 15px; font-size: 0.9rem; pointer-events: auto; z-index: 110; }
+    .ctrl-btn { cursor: pointer; opacity: 0.9; text-decoration: none; color: var(--text-color); }
+    .separator { opacity: 0.5; }
+
+    @media (max-width: 768px) {
+        #main-title { font-size: 1.6rem; letter-spacing: 0.4rem; }
+        .mobile-break { display: inline; }  
+        #mini-branding { left: 20px; top: 30px; }
+        #header-controls { right: 20px; top: 30px; }
+    }
+
+     
+.chat-bubble-container {
+    display: flex;
+    margin: 40px 0;
+    width: 100%;
+    align-items: flex-start;
+}
+
+ 
+.chat-bubble-container.right {
+    flex-direction: row-reverse;
+}
+
+ 
+.chat-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--text-color);
+    color: var(--bg-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.chat-content {
+    max-width: 70%;
+    margin: 0 15px;
+}
+
+ 
+.chat-bubble {
+    padding: 15px 20px;
+    background: rgba(150, 150, 150, 0.05);  
+    border: 1px solid rgba(150, 150, 150, 0.1);
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    backdrop-filter: blur(5px);  
+}
+
+ 
+.right .chat-bubble {
+    background: rgba(100, 150, 200, 0.05);
+}
+
+ 
+.list-container {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;  
+    padding: 0 5vw;    
+    height: 80vh;      
+    align-items: center;  
+    gap: 40px;         
+}
+
+ 
+.story-page {
+    min-width: 320px;    
+    max-width: 400px;
+    height: 60vh;        
+    background: rgba(255, 255, 255, 0.95);  
+    color: #333;         
+    padding: 40px 30px;  
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);  
+    border-radius: 4px;  
+    
+     
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;  
+    
+    transition: transform 0.3s ease;
+}
+
+.story-page:hover {
+    transform: translateY(-10px);  
+}
+
+ 
+.story-content {
+    font-family: "Yu Mincho", "Times New Roman", serif;  
+    line-height: 1.8;
+    font-size: 0.95rem;
+    text-align: justify;  
+    flex-grow: 1;  
+    overflow: hidden;  
+    margin: 20px 0;
+    opacity: 0.8;
+}
+
+.story-title {
+    font-size: 1.4rem;
+    margin: 0 0 10px 0;
+    font-feature-settings: "palt";  
+}
+
+.story-date, .page-number {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #999;
+}
+</style>
+
+    <article id="post-container">
+        <header class="post-header">
+            <div class="post-date">2026.01.11</div>
+            <h1>テスト投稿5</h1>
+        </header>
+
+        <div class="post-content">
+            <p>テスト5</p>
+
+        </div>
+
+        <a href="/posts/" class="back-link">← BACK TO LIST</a>
+    </article>
+
+    <canvas id="canvas"></canvas>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    
+    
+    let isDarkMode = false;
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme === 'dark') {
+        isDarkMode = true;
+        document.body.classList.add('dark-mode');
+    }
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: -9999, y: -9999 };
+    let lastMoveTime = Date.now();
+
+    
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        
+        if (isDarkMode) {
+            themeBtn.innerText = "\u2600\uFE0E"; 
+        }
+
+        themeBtn.onclick = () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            
+            
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+
+            themeBtn.innerText = isDarkMode ? "\u2600\uFE0E" : "\u263D"; 
+            if(particles.length > 0) particles.forEach(p => p.initColor(isDarkMode));
+        };
+    }
+
+    
+    setTimeout(() => {
+        ['site-header', 'nav-container'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.opacity = "1";
+        });
+    }, 100);
+
+    
+    let lastScrollY = 0; 
+
+    const handleScroll = () => {
+        const header = document.getElementById('site-header');
+        if (!header) return;
+
+        const currentScrollY = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
+        const isScrollingDown = currentScrollY > lastScrollY;
+        
+        
+        const items = document.querySelectorAll('.nav-item');
+        const vh = window.innerHeight;
+        items.forEach(item => {
+            const rect = item.getBoundingClientRect();
+            if (rect.top < vh * 0.7 && rect.bottom > vh * 0.3) {
+                item.classList.add('is-active');
+            } else {
+                item.classList.remove('is-active');
+            }
+        });
+
+        
+        const branding = header.querySelector('#center-branding');
+        const listBranding = header.querySelector('#list-branding');
+        const miniBranding = header.querySelector('#mini-branding');
+
+        header.style.transform = "none";
+        header.style.opacity = "1";
+
+        
+        if (branding) {
+            const startFade = 80;
+            if (currentScrollY > startFade) {
+                let diff = currentScrollY - startFade;
+                let moveUp = Math.min(diff, 150);
+                let fadeOut = 1 - (diff / 100);
+                
+                branding.style.transform = `translateY(-${moveUp}px)`;
+                branding.style.opacity = fadeOut < 0 ? 0 : fadeOut;
+                branding.style.pointerEvents = fadeOut <= 0 ? "none" : "auto";
+            } else {
+                branding.style.transform = "translateY(0)";
+                branding.style.opacity = "1";
+                branding.style.pointerEvents = "auto";
+            }
+        }
+
+        
+        if (header.classList.contains('page-single')) {
+            const shouldHide = isScrollingDown && currentScrollY > 100;
+            const hiddenStyle = "translateY(-150px)";
+            const visibleStyle = "translateY(0)";
+            const opacityStyle = shouldHide ? "0" : "1";
+
+            if (listBranding) {
+                listBranding.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+                listBranding.style.transform = shouldHide ? hiddenStyle : visibleStyle;
+                listBranding.style.opacity = opacityStyle;
+                listBranding.style.pointerEvents = shouldHide ? "none" : "auto";
+            }
+            if (miniBranding) {
+                miniBranding.style.transition = "transform 0.5s ease, opacity 0.5s ease";
+                miniBranding.style.transform = shouldHide ? hiddenStyle : visibleStyle;
+                miniBranding.style.opacity = opacityStyle;
+            }
+        }
+        
+        else if (header.classList.contains('page-list')) {
+            if (listBranding) {
+                listBranding.style.transform = "translateY(0)";
+                listBranding.style.opacity = "1";
+                listBranding.style.pointerEvents = "auto";
+            }
+            if (miniBranding) {
+                miniBranding.style.transform = "translateY(0)";
+                miniBranding.style.opacity = "1";
+            }
+        }
+
+        lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, {passive: true});
+    window.addEventListener('touchmove', handleScroll, {passive: true});
+
+    
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; lastMoveTime = Date.now(); });
+    window.addEventListener('touchstart', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; lastMoveTime = Date.now(); }, {passive: true});
+    window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; lastMoveTime = Date.now(); }, {passive: true});
+
+    const colorsLight = ['rgba(140, 160, 180, 0.6)', 'rgba(150, 140, 180, 0.6)', 'rgba(210, 200, 150, 0.6)', 'rgba(160, 140, 120, 0.6)'];
+    const colorsDark = ['rgba(180, 200, 255, 0.6)', 'rgba(200, 180, 255, 0.6)', 'rgba(255, 240, 180, 0.6)', 'rgba(220, 220, 220, 0.6)'];
+
+    class Particle {
+        constructor() { this.init(); }
+        init() {
+            this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+            
+            this.vx = (Math.random() - 0.5) * 0.6; 
+            this.vy = (Math.random() - 0.5) * 0.6;
+            this.sensitivity = Math.random(); 
+            
+            this.initColor(isDarkMode);
+            const isMobile = window.innerWidth <= 768;
+            this.size = Math.random() * 0.2 + (isMobile ? 0.4 : 0.8);
+        }
+        initColor(dark) {
+            const palette = dark ? colorsDark : colorsLight;
+            this.color = palette[Math.floor(Math.random() * palette.length)];
+        }
+        update(time, stopDuration) {
+            const nx = this.x * 0.0003; const ny = this.y * 0.0003;
+            let angle = Math.sin(nx + time) * 3.0 + Math.cos(ny - time) * 3.0;
+            let ax = Math.cos(angle) * 0.03 * this.sensitivity;
+            let ay = Math.sin(angle) * 0.03 * this.sensitivity;
+            const isTouching = ('ontouchstart' in window) && (Date.now() - lastMoveTime < 500);
+            if (stopDuration > 3000 || isTouching) {
+                const dx = this.x - mouse.x; const dy = this.y - mouse.y;
+                const distSq = dx * dx + dy * dy;
+                if (distSq < 40000) {
+                    const dist = Math.sqrt(distSq);
+                    const repulsion = isTouching ? 0.02 : Math.min((stopDuration - 3000) * 0.00001, 0.02);
+                    ax += (dx / dist) * repulsion; ay += (dy / dist) * repulsion;
+                }
+            }
+            this.vx += ax; this.vy += ay; this.vx *= 0.98; this.vy *= 0.98;
+            this.x += this.vx; this.y += this.vy;
+            if (this.x < 0) this.x = canvas.width; if (this.x > canvas.width) this.x = 0;
+            if (this.y < 0) this.y = canvas.height; if (this.y > canvas.height) this.y = 0;
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+
+    resize(); particles = []; for (let i = 0; i < 3800; i++) particles.push(new Particle());
+    let time = 0;
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-color');
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        time += 0.0001;
+        const stopDuration = Date.now() - lastMoveTime;
+        particles.forEach(p => { p.update(time, stopDuration); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+    setTimeout(handleScroll, 500);
+    
+});
+
+</script>
+</body>
+</html>

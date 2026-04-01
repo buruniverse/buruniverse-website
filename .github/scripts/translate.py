@@ -15,19 +15,10 @@ KAOMOJI_PATTERN = re.compile(
 )
 
 def protect_kaomoji(text):
-    placeholders = {}
-    counter = [0]
-    def replace(m):
-        key = f'__KAOMOJI{counter[0]}__'
-        placeholders[key] = m.group(0)
-        counter[0] += 1
-        return key
-    return KAOMOJI_PATTERN.sub(replace, text), placeholders
+    return KAOMOJI_PATTERN.sub(r'<notranslate>\g<0></notranslate>', text)
 
-def restore_kaomoji(text, placeholders):
-    for key, val in placeholders.items():
-        text = text.replace(key, val)
-    return text
+def restore_kaomoji(text):
+    return re.sub(r'</?notranslate>', '', text)
 
 def translate(text):
     api_url = (
@@ -35,11 +26,13 @@ def translate(text):
         if DEEPL_API_KEY.endswith(':fx')
         else 'https://api.deepl.com/v2/translate'
     )
-    protected_text, placeholders = protect_kaomoji(text)
+    protected_text = protect_kaomoji(text)
     data = urllib.parse.urlencode({
         'text': protected_text,
         'source_lang': 'JA',
         'target_lang': 'EN-US',
+        'tag_handling': 'xml',
+        'ignore_tags': 'notranslate',
     }).encode()
     req = urllib.request.Request(
         api_url, data=data,
@@ -47,7 +40,7 @@ def translate(text):
     )
     with urllib.request.urlopen(req) as res:
         result = json.loads(res.read())['translations'][0]['text']
-    return restore_kaomoji(result, placeholders)
+    return restore_kaomoji(result)
 
 def process_file(ja_path):
     content = Path(ja_path).read_text(encoding='utf-8')

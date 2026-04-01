@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+    {{ partial "head.html" . }}
+    <style>
+        /* 詳細ページ用のシンプルなスタイル */
+        body { background: var(--bg-color); color: var(--text-color); margin: 0; }
+        
+        #post-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 180px 30px 100px; /* タイトルと重ならないよう上をあける */
+            position: relative;
+            z-index: 20; /* 粒子の canvas より上に */
+            line-height: 1.8;
+        }
+
+        .post-header { margin-bottom: 50px; text-align: center; }
+        .post-header h1 { font-size: 2rem; letter-spacing: 0.1rem; margin-bottom: 10px; }
+        .post-date { opacity: 0.5; font-size: 0.8rem; letter-spacing: 0.2rem; }
+
+        .post-content { font-size: 1.05rem; }
+        .post-content p { margin-bottom: 1.5em; }
+        
+        /* 戻るボタン */
+        .back-link {
+            display: inline-block;
+            margin-top: 50px;
+            text-decoration: none;
+            color: inherit;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            font-size: 1.0rem;
+        }
+        .back-link:hover { opacity: 1; }
+
+        /* single.html の <style> 内に追加 */
+
+        .post-content img {
+            max-width: 100%;    /* 親要素の幅（800px）を超えないようにする */
+            height: auto;       /* 比率を保ったままリサイズ */
+            display: block;
+            margin: 40px auto;  /* 画像を中央に寄せて、前後に余白を作る */
+            border-radius: 8px; /* 角を少し丸くすると雰囲気が柔らかくなります */
+        }
+
+        /* ついでに動画やiframe（YouTube等）がある場合もはみ出さないように */
+        .post-content iframe, 
+        .post-content video {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    {{ partial "header.html" . }}
+
+    <article id="post-container">
+        <header class="post-header">
+            <div class="post-date">{{ .Date.Format "2006.01.02" }}</div>
+            <h1>{{ .Title }}</h1>
+        </header>
+
+        <div class="post-content">
+            {{ .Content }}
+        </div>
+
+        <a href="/posts/" class="back-link">← BACK TO LIST</a>
+    </article>
+
+    {{ partial "scripts.html" . }}
+</body>
+</html>

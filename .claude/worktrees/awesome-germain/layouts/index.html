@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+    {{ partial "head.html" . }}
+    <style>
+        /* --- Safariの白い隙間 & バウンス撃退パッチ --- */
+        html {
+            /* 隙間が出ても背景色で埋める */
+            background: var(--bg-color);
+            /* Safari特有の「びよよーん」を禁止 */
+            overscroll-behavior: none;
+            height: 100%;
+        }
+
+        body {
+            margin: 0; padding: 0; width: 100%;
+            /* 画面全体を固定して隙間を物理的に作らせない */
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden;
+            background: var(--bg-color);
+            overscroll-behavior: none;
+        }
+
+        /* --- メニューが画面からはみ出た時だけスクロールさせる --- */
+        #nav-container {
+            /* 外部CSSの配置設定（中央揃えなど）を崩さないよう、位置指定は最低限に */
+            position: absolute; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%);
+            
+            /* メニューが多い時はこの箱の中でスクロール */
+            width: 100%; /* 横幅は既存CSSに任せつつ、確保はする */
+            max-height: 100vh; /* 画面の高さいっぱいまで */
+            overflow-y: auto; /* 縦スクロール許可 */
+            -webkit-overflow-scrolling: touch;
+            
+            /* スクロールバーは隠す */
+            scrollbar-width: none; 
+        }
+
+        #canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 0;
+        
+        /* ここが重要：画面に合わせて強制的に引き伸ばす */
+        width: 100%;
+        height: 100%;
+        
+        /* 念の為のタッチ無効化（メニュー操作の邪魔をしないように） */
+        pointer-events: none; 
+    }
+    
+        #nav-container::-webkit-scrollbar { display: none; }
+
+        .tokushoho-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.6rem;
+            opacity: 0.35;
+            color: inherit;
+            text-decoration: none;
+            z-index: 100;
+            letter-spacing: 0.05em;
+            transition: opacity 0.3s;
+        }
+        .tokushoho-link:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+    {{ partial "header.html" . }}
+
+    <nav id="nav-container">
+        {{ range .Site.Menus.main }}
+            <a href="{{ .URL | relLangURL }}" class="nav-item item-{{ .Weight }}" style="text-decoration: none; color: inherit;">
+                {{ if modBool .Weight 2 }}
+                    <span class="symbol">{{ .Pre }}</span>
+                    <span class="label label-right">
+                        {{ .Name | replaceRE "([〈\\(])" "<br>$1" | safeHTML }}
+                    </span>
+                {{ else }}
+                    <span class="label label-left">
+                        {{ .Name | replaceRE "([〈\\(])" "<br>$1" | safeHTML }}
+                    </span>
+                    <span class="symbol">{{ .Pre }}</span>
+                {{ end }}
+            </a>
+        {{ end }}
+    </nav>
+
+    {{ if eq .Lang "ja" }}
+    <a href="{{ "/tokushoho/" | relLangURL }}" class="tokushoho-link">特定商取引法に基づく表記</a>
+    {{ end }}
+
+    {{ partial "scripts.html" . }}
+</body>
+</html>

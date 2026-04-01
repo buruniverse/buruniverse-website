@@ -1,0 +1,10 @@
+<div class="chat-bubble-container {{ .Get "side" | default "left" }}">
+    <div class="chat-icon">
+        <span class="icon-label">{{ .Get "icon" | default "∵" }}</span>
+    </div>
+    <div class="chat-content">
+        <div class="chat-bubble">
+            {{ .Inner | markdownify }}
+        </div>
+    </div>
+</div>

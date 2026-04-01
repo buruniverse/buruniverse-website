@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>日常 on ∴霧観測窓∵</title>
+    <link>http://localhost:1314/ja/tags/%E6%97%A5%E5%B8%B8/</link>
+    <description>Recent content in 日常 on ∴霧観測窓∵</description>
+    <generator>Hugo</generator>
+    <language>ja</language>
+    <lastBuildDate>Thu, 22 Jan 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1314/ja/tags/%E6%97%A5%E5%B8%B8/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>もやもや</title>
+      <link>http://localhost:1314/ja/posts/post-3/</link>
+      <pubDate>Thu, 22 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/ja/posts/post-3/</guid>
+      <description>&lt;p&gt;今日は嫌なこととまではいかない微妙な気持ちになることがあった。&lt;/p&gt;&#xA;&lt;p&gt;他愛もないことだけど、しばらく考えちゃってどこかモヤモヤするようなこと。&lt;/p&gt;&#xA;&lt;p&gt;そういう時は、頭で考えようとすると悪循環する。&lt;/p&gt;&#xA;&lt;p&gt;あいつは失礼なやつだとか、自分が悪かったとか、&lt;br&gt;&#xA;脳はすぐそういうラベルをつけようとする。&lt;/p&gt;&#xA;&lt;p&gt;だからそういう時は、思考しないでただモヤモヤを感覚するのが一番いい。&lt;/p&gt;&#xA;&lt;p&gt;身体感覚で、胸がぎゅっとしてるとか、鳩尾がグニュグニュするとか、&lt;br&gt;&#xA;そういうのでもいいけど、&lt;/p&gt;&#xA;&lt;p&gt;さらに一段階抽象的にして、思考でも身体でもないところでもやもやに意識を向ける。&lt;/p&gt;&#xA;&lt;p&gt;大事なのは、意識を向けるだけでそれ以外は何もしないこと。&lt;/p&gt;&#xA;&lt;p&gt;そうすると、そのことが起こってもやもやが発生していたという事実だけ残って、&lt;/p&gt;&#xA;&lt;p&gt;もやもやはもやもやではなくなる。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>初投稿</title>
+      <link>http://localhost:1314/ja/posts/post-1/</link>
+      <pubDate>Sat, 17 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/ja/posts/post-1/</guid>
+      <description>&lt;p&gt;初めての投稿。テスト投稿を除いて、だけど。&lt;br&gt;&#xA;どうしよかな。&lt;br&gt;&#xA;何書こうかな。&lt;br&gt;&#xA;今まで日記って続いたことないから、日記じゃないほうがいいな。&lt;/p&gt;&#xA;&lt;p&gt;ついついなんか立派なこと書こうとか、読者の目線に立とうとか思っちゃうけど、&lt;br&gt;&#xA;そう言うふうに考えてたら多分一生書けないから、まずは思考の断片をとりあえず置くのを目標にしよう。&lt;/p&gt;&#xA;&lt;p&gt;後から何かしらになっていくでしょう、きっと。&lt;br&gt;&#xA;霧観測窓だしね。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>テスト投稿</title>
+      <link>http://localhost:1314/ja/posts/test-post/</link>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/ja/posts/test-post/</guid>
+      <description>&lt;p&gt;テスト。&#xA;初めてMarkdownでブログを書きます。&#xA;といってもブログ自体何気に初めてかもしれない。&#xA;とにかくどう動くのか覚えたいな。&#xA;&lt;span class=&#34;memo-wrapper&#34; onclick=&#34;openGlobalMemo(this, event)&#34;&gt;&#xA;    &lt;span class=&#34;memo-anchor&#34;&gt;※&lt;/span&gt;&#xA;    &lt;span class=&#34;memo-data&#34;&gt;&#xA;        &lt;span class=&#34;memo-label&#34;&gt;テストつっこみ&lt;/span&gt;&#xA;        &lt;span class=&#34;memo-text&#34;&gt;注釈テスト。こういう感じでツッコミとか参照リンクとかAIコメント入ると面白いかもなという試み&lt;/span&gt;&#xA;    &lt;/span&gt;&#xA;    &lt;span class=&#34;memo-box-pc&#34;&gt;&#xA;        &lt;span class=&#34;memo-label&#34;&gt;テストつっこみ&lt;/span&gt;&#xA;        注釈テスト。こういう感じでツッコミとか参照リンクとかAIコメント入ると面白いかもなという試み&#xA;    &lt;/span&gt;&#xA;&lt;/span&gt;&#xA;とりあえずこれ、昨日出会ったネコ。&#xA;ブサかわいいの代表選手。&#xA;&lt;img src=&#34;http://localhost:1314/images/IMG_3399.JPG&#34; alt=&#34;野良ブサかわいいネコ&#34;&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

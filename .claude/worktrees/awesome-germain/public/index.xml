@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>∴ Fog &lt;br class=&#39;mobile-break&#39;&gt;Observation &lt;br class=&#39;mobile-break&#39;&gt;Portal ∵</title>
+    <link>http://localhost:1314/</link>
+    <description>Recent content on ∴ Fog &lt;br class=&#39;mobile-break&#39;&gt;Observation &lt;br class=&#39;mobile-break&#39;&gt;Portal ∵</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Thu, 22 Jan 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1314/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>I Started Building a Thinking Clone</title>
+      <link>http://localhost:1314/posts/post-2/</link>
+      <pubDate>Thu, 22 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/posts/post-2/</guid>
+      <description>&lt;p&gt;I’m embarrassingly lazy, so I thought,&lt;/p&gt;&#xA;&lt;p&gt;“Wouldn’t it be nice if I had an AI that could post things for me?”&lt;/p&gt;&#xA;&lt;p&gt;That was all it started as—just a light, lazy idea.&lt;/p&gt;&#xA;&lt;p&gt;But once I actually began, the texture turned out to be way deeper and more interesting than I expected.&lt;/p&gt;&#xA;&lt;p&gt;I’d always &lt;em&gt;wanted&lt;/em&gt; to do something like this.&lt;/p&gt;&#xA;&lt;p&gt;Until now, though, my approach had been more like,&lt;br&gt;&#xA;“Let’s just have an AI do things in a nice way for me.”&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Tangled feeling</title>
+      <link>http://localhost:1314/posts/post-3/</link>
+      <pubDate>Thu, 22 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/posts/post-3/</guid>
+      <description>&lt;p&gt;Today, something happened that wasn’t exactly &lt;em&gt;bad&lt;/em&gt;,&lt;br&gt;&#xA;but left me with a faint, uncomfortable feeling.&lt;/p&gt;&#xA;&lt;p&gt;It was nothing serious—&lt;br&gt;&#xA;just the kind of thing that lingers in your head&lt;br&gt;&#xA;and turns into a soft, cloudy unease.&lt;/p&gt;&#xA;&lt;p&gt;When that happens, trying to &lt;em&gt;think&lt;/em&gt; it through only makes things worse.&lt;/p&gt;&#xA;&lt;p&gt;&lt;em&gt;They were rude.&lt;/em&gt;&lt;br&gt;&#xA;&lt;em&gt;It’s my fault.&lt;/em&gt;&lt;/p&gt;&#xA;&lt;p&gt;The brain is quick to slap labels on it like that.&lt;/p&gt;&#xA;&lt;p&gt;So in moments like this,&lt;br&gt;&#xA;the best thing to do is not to think at all—&lt;br&gt;&#xA;just to &lt;em&gt;feel&lt;/em&gt; the tangled threads.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>First post</title>
+      <link>http://localhost:1314/posts/post-1/</link>
+      <pubDate>Sat, 17 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/posts/post-1/</guid>
+      <description>&lt;p&gt;My first post.&#xA;&amp;hellip;excluding the &amp;ldquo;test post.&amp;rdquo;&lt;/p&gt;&#xA;&lt;p&gt;Just to start.&#xA;No plan, nor style.&#xA;I just needed to write something for the first step,&#xA;Otherwise I won&amp;rsquo;t start writing anything.&lt;/p&gt;&#xA;&lt;p&gt;My goal here is to get out of the perfectionism and just put my foggy thoughts out here.&#xA;This is how the world works, I think.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Test post</title>
+      <link>http://localhost:1314/posts/test-post/</link>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1314/posts/test-post/</guid>
+      <description>&lt;p&gt;Test post.&#xA;It&amp;rsquo;s my first Markdown style blog article.&#xA;Well, actually it&amp;rsquo;s my first blog post in my life.&#xA;I&amp;rsquo;d like to know how it works.&lt;/p&gt;&#xA;&lt;p&gt;For now, I just put the photo of the stray cat I met today.&#xA;It&amp;rsquo;s the typical ugly but cute cat.&lt;/p&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1314/images/IMG_3399.JPG&#34; alt=&#34;ugly cute stray cat&#34;&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

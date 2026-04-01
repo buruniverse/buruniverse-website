@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>散歩 on ∵霧観測窓∴</title>
+    <link>http://pasoko.local:1313/tags/%E6%95%A3%E6%AD%A9/</link>
+    <description>Recent content in 散歩 on ∵霧観測窓∴</description>
+    <generator>Hugo</generator>
+    <language>ja</language>
+    <lastBuildDate>Sun, 11 Jan 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://pasoko.local:1313/tags/%E6%95%A3%E6%AD%A9/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>テスト投稿</title>
+      <link>http://pasoko.local:1313/posts/test-post/</link>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://pasoko.local:1313/posts/test-post/</guid>
+      <description>&lt;p&gt;テスト。&#xA;初めてMarkdownでブログを書きます。&#xA;といってもブログ自体何気に初めてかもしれない。&#xA;とにかくどう動くのか覚えたいな。&#xA;&lt;span class=&#34;memo-wrapper&#34; onclick=&#34;this.classList.toggle(&#39;active&#39;)&#34;&gt;&#xA;    &lt;span class=&#34;memo-anchor&#34;&gt;※&lt;/span&gt;&#xA;    &lt;span class=&#34;memo-box&#34;&gt;&#xA;        &lt;span class=&#34;memo-label&#34;&gt;テストつっこみ&lt;/span&gt;&#xA;        &lt;span class=&#34;memo-text&#34;&gt;はよ書き始めろ&lt;/span&gt;&#xA;    &lt;/span&gt;&#xA;&lt;/span&gt;&#xA;とりあえずこれ、昨日出会ったネコ。&#xA;ブサかわいいの代表選手。&#xA;&lt;img src=&#34;http://pasoko.local:1313/images/IMG_3399.jpg&#34; alt=&#34;野良ブサかわいいネコ&#34;&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
