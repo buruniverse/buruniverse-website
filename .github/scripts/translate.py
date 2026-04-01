@@ -6,40 +6,52 @@ import urllib.parse
 import json
 from pathlib import Path
 
+# 環境変数からAPIキーを取得
 DEEPL_API_KEY = os.environ['DEEPL_API_KEY'].strip()
-# 無料プランのURL（キーが :fx で終わる）
-API_URL = 'https://api-free.deepl.com/v2/translate'
 
+# 【鉄壁ガード Ver.2】
+# 顔文字のパターンを強化： | で始まるもの、腕（ﾉや┐）、特殊記号を幅広くカバー
 KAOMOJI_PATTERN = re.compile(
-    r'[（(|｜][ω∀дﾟ；;･・ー≡*＊]{1,15}\s?[）)\'`]'
+    r'[|｜]?[（(]?[^a-zA-Z0-9\s]{1,15}[）)]?[ﾉ┐]?["\'`]*'
 )
 
 def protect_kaomoji(text):
-    return KAOMOJI_PATTERN.sub(r'<notranslate>\g<0></notranslate>', text)
+    # DeepLに「ここは無視して！」と伝えるための <keep> タグで囲む
+    return KAOMOJI_PATTERN.sub(r'<keep>\g<0></keep>', text)
 
 def restore_kaomoji(text):
-    return re.sub(r'</?notranslate>', '', text)
+    # 翻訳後にタグだけをきれいに消す
+    return re.sub(r'</?keep>', '', text)
 
 def translate(text):
+    # 無料版と有料版のURL自動判定
     api_url = (
         'https://api-free.deepl.com/v2/translate'
         if DEEPL_API_KEY.endswith(':fx')
         else 'https://api.deepl.com/v2/translate'
     )
+    
     protected_text = protect_kaomoji(text)
-    data = urllib.parse.urlencode({
+    
+    # DeepLへのリクエスト設定
+    params = {
         'text': protected_text,
         'source_lang': 'JA',
         'target_lang': 'EN-US',
-        'tag_handling': 'xml',
-        'ignore_tags': 'notranslate',
-    }).encode()
+        'tag_handling': 'xml',        # XMLタグを解釈させる
+        'ignore_tags': 'keep',         # <keep>の中身は翻訳しない
+        'split_sentences': '0',       # ★重要：勝手に改行（文分割）させない
+    }
+    
+    data = urllib.parse.urlencode(params).encode()
     req = urllib.request.Request(
         api_url, data=data,
         headers={'Authorization': f'DeepL-Auth-Key {DEEPL_API_KEY}'}
     )
+    
     with urllib.request.urlopen(req) as res:
         result = json.loads(res.read())['translations'][0]['text']
+    
     return restore_kaomoji(result)
 
 def process_file(ja_path):
@@ -49,6 +61,7 @@ def process_file(ja_path):
         print(f'Front Matterなし、スキップ: {ja_path}')
         return
 
+    # Front Matterと本文を分離
     _, fm, body = content.split('---', 2)
     body = body.strip()
 
@@ -70,7 +83,7 @@ def process_file(ja_path):
     en_path.write_text(f'---{fm_en}---\n\n{en_body}\n', encoding='utf-8')
     print(f'✓ 翻訳完了: {en_path}')
 
-# 引数で渡されたファイル一覧を処理
+# 実行部分
 for filepath in sys.argv[1:]:
     if Path(filepath).exists():
         process_file(filepath)
