@@ -8,23 +8,30 @@ from pathlib import Path
 
 DEEPL_API_KEY = os.environ.get('DEEPL_API_KEY', '').strip()
 
-# 顔文字を見つける強力なパターン
-KAOMOJI_PATTERN = re.compile(r'[|｜]?[（(][^a-zA-Z0-9\s]{1,15}[）)][ﾉ┐]?["\'`]*|[|｜][ω∀дﾟ][^a-zA-Z0-9\s]{0,5}[）)]')
+# 【数式・記号共存ルール】
+# 1. 顔文字によく使われる特殊記号（ω, Д, ﾟ, ∀ など）を含む塊
+# 2. または、通常の記号が3文字以上連続している塊（例: (^^) や (T_T) ）
+# これらを「顔文字」と判定し、単発の + や = はスルーします。
+KAOMOJI_PATTERN = re.compile(
+    r'[|｜]?[（(][^a-zA-Z0-9\sぁ-んァ-ヶ亜-熙]{1,15}[）)][ﾉ┐]?["\'`]*|'
+    r'[^a-zA-Z0-9\sぁ-んァ-ヶ亜-熙]*[ω∀дﾟ；;･・ー≡*＊][^a-zA-Z0-9\sぁ-んァ-ヶ亜-熙]*|'
+    r'[^a-zA-Z0-9\sぁ-んァ-ヶ亜-熙]{3,}'
+)
 
 def translate(text):
     if not text: return ""
     api_url = 'https://api-free.deepl.com/v2/translate' if DEEPL_API_KEY.endswith(':fx') else 'https://api.deepl.com/v2/translate'
 
-    # 【新戦略】タグを使わず、一度顔文字を __K0__ のような記号に置き換えて避難させる
     placeholders = []
     def substitute(match):
+        # 記号の塊を __K0__ のような目印に置き換える
         ph = f" __K{len(placeholders)}__ "
         placeholders.append(match.group(0))
         return ph
 
+    # 翻訳前に記号を避難
     protected_text = KAOMOJI_PATTERN.sub(substitute, text)
 
-    # 翻訳実行
     params = {
         'text': protected_text,
         'source_lang': 'JA',
@@ -38,10 +45,12 @@ def translate(text):
         with urllib.request.urlopen(req) as res:
             result = json.loads(res.read())['translations'][0]['text']
             
-            # 避難させていた顔文字を順番に戻す
+            # 避難させていた記号を元に戻す（小文字に変換された場合も考慮）
             for i, original in enumerate(placeholders):
                 result = result.replace(f"__K{i}__", original).replace(f"__k{i}__", original)
-            return result
+            
+            # 余計な空白を整えて返す
+            return result.replace("  ", " ").strip()
     except Exception as e:
         print(f"Error: {e}")
         return text
