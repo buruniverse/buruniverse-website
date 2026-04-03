@@ -32,9 +32,11 @@ jobs:
         env:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
         run: |
           if [ -s changed.txt ]; then
-            sed 's|^content/ja/|content/en/|' changed.txt | xargs -d '\n' python3 .github/scripts/notify.py
+            xargs -d '\n' python3 .github/scripts/notify.py < changed.txt
           fi
 
       - name: 変更をコミット
