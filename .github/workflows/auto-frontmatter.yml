@@ -28,6 +28,15 @@ jobs:
             echo "翻訳対象ファイルなし"
           fi
 
+      - name: SNS通知
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+        run: |
+          if [ -s changed.txt ]; then
+            sed 's|^content/ja/|content/en/|' changed.txt | xargs -d '\n' python3 .github/scripts/notify.py
+          fi
+
       - name: 変更をコミット
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
