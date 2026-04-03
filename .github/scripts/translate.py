@@ -57,27 +57,35 @@ def translate(text):
 
 def process_file(ja_path):
     p = Path(ja_path)
-    if not p.exists(): return
-    content = p.read_text(encoding='utf-8')
-    if not content.startswith('---'): return
+    if not p.is_file(): return
     
-    parts = content.split('---', 2)
-    fm, body = parts[1], parts[2].strip()
-    
-    # タイトル
-    title_match = re.search(r'title:\s*"(.+)"', fm)
-    if title_match:
-        ja_title = title_match.group(1)
-        en_title = translate(ja_title)
-        fm = fm.replace(f'title: "{ja_title}"', f'title: "{en_title}"')
-    
-    # 本文
-    en_body = translate(body)
-    
-    en_path = Path('content/en/posts') / p.name
-    en_path.parent.mkdir(parents=True, exist_ok=True)
-    en_path.write_text(f'---{fm}---\n\n{en_body}\n', encoding='utf-8')
-    print(f'✓ {en_path}')
+    try:
+        content = p.read_text(encoding='utf-8')
+        if not content.startswith('---'): return
+        
+        # Front Matterを安全に分割
+        parts = content.split('---')
+        if len(parts) < 3: return
+        
+        fm = parts[1]
+        body = '---'.join(parts[2:]).strip()
+        
+        # タイトル
+        title_match = re.search(r'title:\s*"(.+)"', fm)
+        if title_match:
+            ja_title = title_match.group(1)
+            en_title = translate(ja_title)
+            fm = re.sub(r'(title:\s*").+(")', rf'\1{en_title}\2', fm)
+        
+        # 本文
+        en_body = translate(body)
+        
+        en_path = Path('content/en/posts') / p.name
+        en_path.parent.mkdir(parents=True, exist_ok=True)
+        en_path.write_text(f'---{fm}---\n\n{en_body}\n', encoding='utf-8')
+        print(f'✓ {en_path}')
+    except Exception as e:
+        print(f"Error processing {ja_path}: {e}")
 
 if __name__ == "__main__":
     for filepath in sys.argv[1:]:

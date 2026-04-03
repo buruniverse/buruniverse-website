@@ -1,4 +1,4 @@
-import os, sys, re, json, datetime
+import os, sys, re, json, datetime, time
 import urllib.request, urllib.parse
 from urllib.error import HTTPError
 from pathlib import Path
@@ -51,6 +51,10 @@ def post_to_threads(text):
             f'https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads', data=data)
         with urllib.request.urlopen(req) as res:
             creation_id = json.loads(res.read())['id']
+        
+        # コンテナ作成直後だと "Media Not Found" になることがあるため、少し待機する
+        print(f'  ...Threadsコンテナ作成完了(ID: {creation_id})。5秒待機して公開します...')
+        time.sleep(5)
 
         data = urllib.parse.urlencode({
             'creation_id': creation_id,
@@ -66,7 +70,7 @@ def post_to_threads(text):
     except Exception as e:
         print(f'× Threads投稿エラー: {e}')
 
-def post_to_bluesky(text):
+def post_to_bluesky(text, url):
     if not BSKY_HANDLE or not BSKY_APP_PASSWORD:
         print("! Blueskyの認証情報（BSKY_HANDLE / BSKY_APP_PASSWORD）が不足しているためスキップします")
         return
@@ -89,12 +93,25 @@ def post_to_bluesky(text):
 
         # Step2: 投稿
         now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+        
+        # URLをリンクとして認識させるためのFacets設定
+        facets = []
+        encoded_text = text.encode('utf-8')
+        encoded_url = url.encode('utf-8')
+        start = encoded_text.find(encoded_url)
+        if start != -1:
+            facets.append({
+                'index': { 'byteStart': start, 'byteEnd': start + len(encoded_url) },
+                'features': [{ '$type': 'app.bsky.richtext.facet#link', 'uri': url }]
+            })
+
         payload = json.dumps({
             'repo': did,
             'collection': 'app.bsky.feed.post',
             'record': {
                 '$type': 'app.bsky.feed.post',
                 'text': text,
+                'facets': facets,
                 'createdAt': now
             }
         }).encode()
