@@ -14,15 +14,32 @@ BSKY_APP_PASSWORD = os.environ.get('BSKY_APP_PASSWORD', '')
 BASE_URL = 'https://buruniverse.pages.dev'
 
 def get_post_info(filepath):
-    content = Path(filepath).read_text(encoding='utf-8')
-    if not content.startswith('---'):
+    path = Path(filepath)
+    # 通知メッセージが英語なので、日本語版のパスが渡されても英語版からタイトルを取得する
+    if 'content/ja/posts' in str(path):
+        en_path = Path(str(path).replace('content/ja/posts', 'content/en/posts'))
+        if en_path.exists():
+            path = en_path
+
+    try:
+        content = path.read_text(encoding='utf-8')
+        if not content.startswith('---'):
+            return None, None
+        
+        parts = content.split('---')
+        if len(parts) < 3:
+            return None, None
+            
+        fm = parts[1]
+        # title: "..." の形式を検索
+        m = re.search(r'title:\s*"(.+)"', fm)
+        title = m.group(1) if m else path.stem
+        
+        slug = urllib.parse.quote(path.stem)
+        url = f'{BASE_URL}/en/posts/{slug}/'
+        return title, url
+    except Exception:
         return None, None
-    _, fm, _ = content.split('---', 2)
-    m = re.search(r'^title:\s*"(.+)"', fm, re.MULTILINE)
-    title = m.group(1) if m else Path(filepath).stem
-    slug = urllib.parse.quote(Path(filepath).stem)
-    url = f'{BASE_URL}/en/posts/{slug}/'
-    return title, url
 
 def post_to_threads(text):
     try:
@@ -99,13 +116,14 @@ def post_to_bluesky(text):
         print(f'× Bluesky投稿エラー: {e}')
 
 for filepath in sys.argv[1:]:
-    if not Path(filepath).exists():
+    path = Path(filepath)
+    if not path.exists() or not path.is_file():
         continue
-    title, url = get_post_info(filepath)
+    title, url = get_post_info(path)
     if not title:
         continue
     message = f'New blog post is up! 📝\n\n{title}\n{url}'
     if THREADS_TOKEN:
         post_to_threads(message)
     if BSKY_HANDLE:
-        post_to_bluesky(message)
+        post_to_bluesky(message, url)
