@@ -42,4 +42,4 @@ for filepath in sys.argv[1:]:
         continue
     title, url = get_post_info(filepath)
     if title:
-        post_to_threads(f'新しい記事を書きました📝\n\n{title}\n{url}')
+        post_to_threads(f'New blog post is up! 📝\n\n{title}\n{url}')
