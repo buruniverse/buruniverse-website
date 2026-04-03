@@ -1,1 +1,2 @@
-content/ja/posts/Threads自動通知連携テスト.md
+content/ja/posts/Blueskyブログ更新自動通知回路のテスト投稿.md
+content/ja/posts/Blueskyブログ自動通知再テスト.md
