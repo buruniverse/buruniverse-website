@@ -1,1 +1,1 @@
-content/ja/posts/まだまだ顔文字テストいくよ.md
+content/ja/posts/Threads自動通知連携テスト.md
