@@ -15,6 +15,10 @@ BASE_URL = 'https://buruniverse.pages.dev'
 
 def get_post_info(filepath):
     path = Path(filepath)
+    # 一覧ページ用のファイルなどはスキップ
+    if path.name == '_index.md' or not path.suffix == '.md':
+        return None, None
+
     # 通知メッセージが英語なので、日本語版のパスが渡されても英語版からタイトルを取得する
     if 'content/ja/posts' in str(path):
         en_path = Path(str(path).replace('content/ja/posts', 'content/en/posts'))
@@ -92,13 +96,24 @@ def post_to_bluesky(text, url):
         did = session['did']
 
         # Step2: 投稿
-        now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
         
-        # URLをリンクとして認識させるためのFacets設定
+        # リンクカードとFacetsの設定
         facets = []
         encoded_text = text.encode('utf-8')
         encoded_url = url.encode('utf-8')
         start = encoded_text.find(encoded_url)
+
+        # リンクをカード形式で見せるためのEmbed設定
+        embed = {
+            '$type': 'app.bsky.embed.external',
+            'external': {
+                'uri': url,
+                'title': text.split('\n\n')[1] if '\n\n' in text else "New Blog Post",
+                'description': ""
+            }
+        }
+
         if start != -1:
             facets.append({
                 'index': { 'byteStart': start, 'byteEnd': start + len(encoded_url) },
@@ -112,6 +127,7 @@ def post_to_bluesky(text, url):
                 '$type': 'app.bsky.feed.post',
                 'text': text,
                 'facets': facets,
+                'embed': embed,
                 'createdAt': now
             }
         }).encode()
@@ -140,6 +156,7 @@ for filepath in sys.argv[1:]:
     if not title:
         continue
     message = f'New blog post is up! 📝\n\n{title}\n{url}'
+    print(f'--- Sending Notification ---\nURL: {url}\nMessage:\n{message}\n----------------------------')
     if THREADS_TOKEN:
         post_to_threads(message)
     if BSKY_HANDLE:
