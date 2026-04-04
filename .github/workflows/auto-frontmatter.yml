@@ -23,7 +23,7 @@ jobs:
           DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
         run: |
           # 今回のプッシュ（最新コミット）で変更されたファイルのみを抽出
-          git log -1 --name-only --pretty=format: -- content/ja/posts/ | grep '\.md$' > changed.txt || true
+          git -c core.quotepath=false diff --name-only HEAD~1 HEAD -- content/ja/posts/ | grep '\.md' > changed.txt || true
           cat changed.txt
           if [ -s changed.txt ]; then
             xargs -d '\n' python3 .github/scripts/translate.py < changed.txt
