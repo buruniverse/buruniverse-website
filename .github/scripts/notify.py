@@ -19,14 +19,15 @@ def get_post_info(filepath):
     if path.name == '_index.md' or not path.suffix == '.md':
         return None, None
 
-    # 通知メッセージが英語なので、日本語版のパスが渡されても英語版からタイトルを取得する
-    if 'content/ja/posts' in str(path):
-        en_path = Path(str(path).replace('content/ja/posts', 'content/en/posts'))
-        if en_path.exists():
-            path = en_path
-
     try:
-        content = path.read_text(encoding='utf-8')
+        # 基準となるディレクトリを特定
+        base_dir = 'content/en/posts' if 'content/en/posts' in str(path) else 'content/ja/posts'
+        
+        # 通知は常に英語版を参照するようにパスを差し替える
+        en_path = Path(str(path).replace('content/ja/posts', 'content/en/posts'))
+        target_path = en_path if en_path.exists() else path
+
+        content = target_path.read_text(encoding='utf-8')
         if not content.startswith('---'):
             return None, None
         
@@ -35,12 +36,15 @@ def get_post_info(filepath):
             return None, None
             
         fm = parts[1]
-        # title: "..." の形式を検索
         m = re.search(r'title:\s*"(.+)"', fm)
-        title = m.group(1) if m else path.stem
+        title = m.group(1) if m else target_path.stem
         
-        slug = urllib.parse.quote(path.stem)
-        url = f'{BASE_URL}/en/posts/{slug}/'
+        # デフォルト言語(en)がルートになるURL構造に対応
+        rel_path = target_path.relative_to('content/en/posts' if en_path.exists() else 'content/ja/posts')
+        url_path = '/'.join([urllib.parse.quote(p) for p in rel_path.with_suffix('').parts])
+        
+        # 英語はデフォルトなので /en/ は不要
+        url = f'{BASE_URL}/posts/{url_path}/'
         return title, url
     except Exception:
         return None, None
@@ -109,7 +113,7 @@ def post_to_bluesky(text, url):
             '$type': 'app.bsky.embed.external',
             'external': {
                 'uri': url,
-                'title': text.split('\n\n')[1] if '\n\n' in text else "New Blog Post",
+                'title': title, # URLを含まない純粋なタイトルを使用
                 'description': ""
             }
         }

@@ -12,15 +12,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # 差分を取得するために履歴を少し取得
 
       - name: Front Matter を自動追加
         run: python3 .github/scripts/add_frontmatter.py
 
-      - name: 英語に翻訳
+      - name: 変更されたファイルを特定
         env:
           DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
         run: |
-          git -c core.quotepath=false diff --name-only HEAD -- content/ja/posts/ > changed.txt
+          # 今回のプッシュ（最新コミット）で変更されたファイルのみを抽出
+          git log -1 --name-only --pretty=format: -- content/ja/posts/ | grep '\.md$' > changed.txt || true
           cat changed.txt
           if [ -s changed.txt ]; then
             xargs -d '\n' python3 .github/scripts/translate.py < changed.txt

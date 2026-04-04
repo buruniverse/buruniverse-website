@@ -80,7 +80,9 @@ def process_file(ja_path):
         # 本文
         en_body = translate(body)
         
-        en_path = Path('content/en/posts') / p.name
+        # 元の相対パス構造を維持して保存
+        rel_path = p.relative_to('content/ja/posts')
+        en_path = Path('content/en/posts') / rel_path
         en_path.parent.mkdir(parents=True, exist_ok=True)
         en_path.write_text(f'---{fm}---\n\n{en_body}\n', encoding='utf-8')
         print(f'✓ {en_path}')
