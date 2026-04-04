@@ -1,3 +1,1 @@
-content/ja/posts/Blueskyに自動通知できるかテスト.md
-content/ja/posts/Blueskyテスト4回目テスト投稿.md
-content/ja/posts/もう一回テスト投稿.md
+content/ja/posts/永遠のテスト投稿.md
