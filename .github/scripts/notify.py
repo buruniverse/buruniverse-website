@@ -61,8 +61,8 @@ def post_to_threads(text):
             creation_id = json.loads(res.read())['id']
         
         # コンテナ作成直後だと "Media Not Found" になることがあるため、少し待機する
-        print(f'  ...Threadsコンテナ作成完了(ID: {creation_id})。5秒待機して公開します...')
-        time.sleep(5)
+        print(f'  ...Threadsコンテナ作成完了(ID: {creation_id})。10秒待機して公開します...')
+        time.sleep(10)
 
         data = urllib.parse.urlencode({
             'creation_id': creation_id,
@@ -78,7 +78,7 @@ def post_to_threads(text):
     except Exception as e:
         print(f'× Threads投稿エラー: {e}')
 
-def post_to_bluesky(text, url):
+def post_to_bluesky(text, url, title):
     if not BSKY_HANDLE or not BSKY_APP_PASSWORD:
         print("! Blueskyの認証情報（BSKY_HANDLE / BSKY_APP_PASSWORD）が不足しているためスキップします")
         return
@@ -164,4 +164,4 @@ for filepath in sys.argv[1:]:
     if THREADS_TOKEN:
         post_to_threads(message)
     if BSKY_HANDLE:
-        post_to_bluesky(message, url)
+        post_to_bluesky(message, url, title)
