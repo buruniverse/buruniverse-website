@@ -1,1 +1,1 @@
-content/ja/posts/もう一回行きます.md
+content/ja/posts/まだ行きます.md
