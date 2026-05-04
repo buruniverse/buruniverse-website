@@ -7,14 +7,14 @@
            BURUNIVERSE — HOME PAGE
            ====================================== */
 
-        /* Body: scrollable, no bounce */
-        html {
-            overscroll-behavior-y: none;
-            background: var(--bg-color);
-        }
-        body {
-            overscroll-behavior-y: none;
+        /* Body: force scrollable */
+        html, body {
+            position: static !important;
+            overflow: visible !important;
+            overflow-y: auto !important;
+            height: auto !important;
             min-height: 100vh;
+            background: var(--bg-color);
         }
 
         /* Canvas stays fixed behind everything (dimensions set by JS in scripts.html) */
