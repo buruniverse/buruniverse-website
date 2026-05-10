@@ -8,17 +8,16 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:     #0c0b0a;
-      --text:   #d4d0c8;
-      --dim:    rgba(212, 208, 200, 0.38);
-      --accent: #8ba4d4;
+      --bg:     #F4F2F0;
+      --text:   #1a1917;
+      --dim:    rgba(26, 25, 23, 0.35);
+      --accent: #3a5da8;
     }
 
     html, body {
       height: 100%;
       background: var(--bg);
       color: var(--text);
-      /* monospace that renders half-width kana nicely */
       font-family: 'Courier New', 'Noto Sans Mono', 'MS Gothic', monospace;
       overflow: hidden;
     }
@@ -29,7 +28,7 @@
       inset: 0;
       display: flex;
       align-items: center;
-      overflow: hidden;       /* rush frame can bleed off edges */
+      overflow: hidden;
       z-index: 100;
       background: var(--bg);
       transition: opacity 0.9s ease;
@@ -40,23 +39,27 @@
     }
 
     #kaomoji {
-      /* clamp: min 13px · fluid 3.5vw · max 21px */
       font-size: clamp(13px, 3.5vw, 21px);
       white-space: pre;
       letter-spacing: 0;
       position: absolute;
       left: 0;
-      /* position snaps instantly for left-edge frames */
+      opacity: 1;
+      transition: opacity 0.08s ease;
     }
-    /* centered phase: smooth spring into place */
+    #kaomoji.flash {
+      opacity: 0.25;
+    }
+    /* centered phase: spring snap into center */
     #kaomoji.is-centered {
       left: 50% !important;
       transform: translateX(-50%);
-      transition: left 0.22s cubic-bezier(0.34, 1.4, 0.64, 1),
-                  transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+      transition: left 0.28s cubic-bezier(0.34, 1.4, 0.64, 1),
+                  transform 0.28s cubic-bezier(0.34, 1.4, 0.64, 1),
+                  opacity 0.08s ease;
     }
 
-    /* ── Main page (hidden until loader done) ───────── */
+    /* ── Main page ───────────────────────────────────── */
     #main {
       position: fixed;
       inset: 0;
@@ -88,7 +91,7 @@
       letter-spacing: 0.03em;
     }
     .chat-input {
-      background: rgba(212,208,200,0.05);
+      background: rgba(26,25,23,0.04);
       border: 1px solid var(--dim);
       border-radius: 10px;
       padding: 0.75rem 1rem;
@@ -147,7 +150,7 @@
       position: fixed;
       bottom: 1.2rem;
       font-size: clamp(10px, 2.2vw, 12px);
-      color: rgba(212,208,200,0.2);
+      color: rgba(26,25,23,0.2);
       letter-spacing: 0.12em;
     }
   </style>
@@ -182,23 +185,49 @@
 </div>
 
 <script>
-  // ── Animation frames ────────────────────────────────────
+  // ── Animation frames ─────────────────────────────────────
+  // Timings doubled + intermediate frames added for smoothness
   const frames = [
-    { text: '|',                                              centered: false, ms: 360 },
-    { text: ' | )',                                           centered: false, ms: 300 },
-    { text: ' |ω･ )…',                                       centered: false, ms: 520 },
-    { text: ' |ω･ )ﾉｼ𓈒𓏸 ｺﾝﾆﾁﾊ',                            centered: false, ms: 760 },
-    { text: ' | ω･)っ…ｯｽ',                                   centered: false, ms: 360 },
-    { text: ' |( っ･ω･)っ…ｽｽｯ',                              centered: false, ms: 220 },
-    { text: ' |-=≡((((っ･ω･)っﾀﾞｯ',                          centered: false, ms: 160 },
-    { text: '-=≡((((((((((((っ･ω･)っﾋﾞｭｰｰｰｰｰｰﾝ',             centered: false, ms: 200 },
-    { text: '⊂( ･ω･ )⊃ｼｬｯ…!',                               centered: true,  ms: 520 },
-    { text: 'ｼﾞｬｰﾝ! ‧₊˚⋅\\└( ･ω･ )┘///‧₊˚⋅ｲﾗｯｼｬｲ!',        centered: true,  ms: 920 },
-    { text: 'ｼﾞｭﾝﾋﾞｽﾙﾖ~ (。-ω-).｡…',                        centered: true,  ms: 1100 },
-    { text: 'ﾁｮｯﾄﾏｯﾃﾅ~ (。-ω-).｡o …',                       centered: true,  ms: 1100 },
-    { text: 'ﾓｳｽｸﾞﾖ~ (。-ω-).｡oO …',                        centered: true,  ms: 1100 },
-    { text: '…(。•ω•) ﾊｯ!',                                  centered: true,  ms: 650 },
-    { text: '(*･∀･*)✧ ｵﾏﾀｾ~',                               centered: true,  ms: 900 },
+
+    // ── peek from left edge ───────────────────────────────
+    { text: '|',                                              centered: false, ms: 720 },
+    { text: '|·',                                            centered: false, ms: 380 },
+    { text: ' | )',                                           centered: false, ms: 600 },
+    { text: ' |･ )',                                          centered: false, ms: 380 },
+    { text: ' |ω･ )…',                                       centered: false, ms: 900 },
+
+    // ── wave hello ────────────────────────────────────────
+    { text: ' |ω･ )ﾉ',                                       centered: false, ms: 440 },
+    { text: ' |ω･ )ﾉｼ𓈒𓏸 ｺﾝﾆﾁﾊ',                            centered: false, ms: 1520 },
+    { text: ' |ω･ )ﾉ',                                       centered: false, ms: 340 },
+    { text: ' |ω･ )…',                                       centered: false, ms: 500 },
+    { text: ' |ω･ )',                                         centered: false, ms: 380 },
+
+    // ── get ready to run ──────────────────────────────────
+    { text: ' | ω･)っ…ｯｽ',                                   centered: false, ms: 720 },
+    { text: ' |っ･ω･)っ…',                                   centered: false, ms: 340 },
+    { text: ' |( っ･ω･)っ…ｽｽｯ',                              centered: false, ms: 440 },
+
+    // ── dash ──────────────────────────────────────────────
+    { text: ' |-=((っ･ω･)っ',                                 centered: false, ms: 260 },
+    { text: ' |-=≡((((っ･ω･)っﾀﾞｯ',                          centered: false, ms: 200 },
+    { text: '-=≡(((((((っ･ω･)っﾋﾞｭｰｰ',                      centered: false, ms: 200 },
+    { text: '-=≡((((((((((((っ･ω･)っﾋﾞｭｰｰｰｰｰｰﾝ',             centered: false, ms: 260 },
+
+    // ── land center ───────────────────────────────────────
+    { text: '⊂(>ω･ )⊃',                                      centered: true,  ms: 300 },
+    { text: '⊂( ･ω･ )⊃ｼｬｯ…!',                               centered: true,  ms: 1040 },
+
+    // ── tada! ─────────────────────────────────────────────
+    { text: ' └( ･ω･ )┘',                                    centered: true,  ms: 360 },
+    { text: 'ｼﾞｬｰﾝ! ‧₊˚⋅\\└( ･ω･ )┘///‧₊˚⋅ｲﾗｯｼｬｲ!',        centered: true,  ms: 1840 },
+
+    // ── loading wait (API or model loading goes here) ─────
+    { text: 'ｼﾞｭﾝﾋﾞｽﾙﾖ~ (。-ω-).｡…',                        centered: true,  ms: 2200 },
+    { text: 'ﾁｮｯﾄﾏｯﾃﾅ~ (。-ω-).｡o …',                       centered: true,  ms: 2200 },
+    { text: 'ﾓｳｽｸﾞﾖ~ (。-ω-).｡oO …',                        centered: true,  ms: 2200 },
+    { text: '…(。•ω•) ﾊｯ!',                                  centered: true,  ms: 1300 },
+    { text: '(*･∀･*)✧ ｵﾏﾀｾ~',                               centered: true,  ms: 1800 },
   ];
 
   const loader   = document.getElementById('loader');
@@ -209,7 +238,6 @@
 
   function tick() {
     if (idx >= frames.length) {
-      // All frames done → cross-fade
       loader.classList.add('fade-out');
       setTimeout(() => {
         loader.style.display = 'none';
@@ -219,22 +247,27 @@
     }
 
     const f = frames[idx++];
-    kaomoji.textContent = f.text;
 
-    if (f.centered) {
-      kaomoji.classList.add('is-centered');
-    } else {
-      kaomoji.classList.remove('is-centered');
-      kaomoji.style.transform = '';
-    }
+    // subtle flash on frame change for ぬるぬる feel
+    kaomoji.classList.add('flash');
+    setTimeout(() => {
+      kaomoji.textContent = f.text;
+      kaomoji.classList.remove('flash');
+
+      if (f.centered) {
+        kaomoji.classList.add('is-centered');
+      } else {
+        kaomoji.classList.remove('is-centered');
+        kaomoji.style.transform = '';
+      }
+    }, 80);
 
     setTimeout(tick, f.ms);
   }
 
-  // tiny delay so the browser has painted before we start
-  setTimeout(tick, 80);
+  setTimeout(tick, 100);
 
-  // ── ▼ﾋﾗｸ / ▲ﾄｼﾞﾙ toggle ─────────────────────────────
+  // ── ▼ﾋﾗｸ / ▲ﾄｼﾞﾙ toggle ──────────────────────────────
   const toggle = document.getElementById('menu-toggle');
   const drawer = document.getElementById('menu-drawer');
   let   open   = false;
