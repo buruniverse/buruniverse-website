@@ -232,7 +232,7 @@
     { text: '　　　　　　　　　　　　　　　　　　　　　　　　　　　　　-=≡⊂(･`ω･´⊂)))))ｷｷｷｷｰｰ!!',    centered: false, ms: 1100 },
 
     // ── land center ───────────────────────────────────────
-    { text: '( ･ω･ )…ｽｯ…',                                                                             centered: true,  ms: 900 },
+    { text: '( ･ω･ )…ｽｯ…',                                                                             centered: true,  ms: 900, noSpring: true },
     { text: '⊂( ･ω･ )⊃ …ｼｬｯ…!',                                                                       centered: true,  ms: 1400 },
 
     // ── tada! ─────────────────────────────────────────────
@@ -277,8 +277,13 @@
       kaomoji.classList.remove('flash');
 
       if (f.centered) {
+        // noSpring: override the spring easing with a flat ease
+        kaomoji.style.transition = f.noSpring
+          ? 'opacity 0.08s ease'
+          : '';
         kaomoji.classList.add('is-centered');
       } else {
+        kaomoji.style.transition = '';
         kaomoji.classList.remove('is-centered');
         kaomoji.style.transform = '';
       }
