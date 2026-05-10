@@ -51,6 +51,18 @@
     #kaomoji.flash {
       opacity: 0.25;
     }
+    /* shake animation */
+    @keyframes kaomoji-shake {
+      0%,100% { margin-left: 0; }
+      20%     { margin-left: -6px; }
+      40%     { margin-left:  6px; }
+      60%     { margin-left: -5px; }
+      80%     { margin-left:  5px; }
+    }
+    #kaomoji.is-shaking {
+      animation: kaomoji-shake 0.1s linear infinite;
+    }
+
     /* centered phase: spring snap into center */
     #kaomoji.is-centered {
       left: 50% !important;
@@ -232,6 +244,25 @@
     { text: 'ﾓｳｽｸﾞﾖ~ (。-ω-).｡oO …',                        centered: true,  ms: 2200 },
     { text: '…(。•ω•) ﾊｯ!',                                  centered: true,  ms: 1300 },
     { text: '(*･∀･*)✧ ｵﾏﾀｾ~',                               centered: true,  ms: 1800 },
+
+    // ── float up ──────────────────────────────────────────
+    { text: '　　　　　　　(･ω･  )｡ｽ…',
+                                                              centered: true,  ms: 700 },
+    { text: '　　　　　　　(･ω･  )。\n                       ｡\n　　　 　　　　　　　　　  　｡ｽｽｽ…',
+                                                              centered: true,  ms: 700 },
+    { text: '　　　　　　　(･ω･  )。\n                      ｡\n　　　　　　　　　　　　　　｡\n                         ｡\n　　　　　　　　　　　　　　　　｡ｽｽｽｽｽ…',
+                                                              centered: true,  ms: 700 },
+
+    // ── shake ─────────────────────────────────────────────
+    { text: 'ﾌﾞﾙﾌﾞﾙ((( ´ω` )))ﾌﾞﾙﾌﾞﾙ',                    centered: true,  ms: 900,  shake: true },
+
+    // ── settle ────────────────────────────────────────────
+    { text: '└(´ω` )┘',                                      centered: true,  ms: 800 },
+    { text: '( ･ω･ )ｽﾝ。。',                                 centered: true,  ms: 900 },
+
+    // ── typewriter ────────────────────────────────────────
+    { text: '(*･ω･*)',                                        centered: true,  ms: 0,
+      typewriter: '< おしゃべりする？💬', typeSpeed: 75 },
   ];
 
   const loader   = document.getElementById('loader');
@@ -264,9 +295,32 @@
         kaomoji.classList.remove('is-centered');
         kaomoji.style.transform = '';
       }
+
+      // shake on/off
+      kaomoji.classList.toggle('is-shaking', !!f.shake);
+
+      // typewriter mode
+      if (f.typewriter) {
+        const append = f.typewriter;
+        const spd    = f.typeSpeed || 80;
+        const base   = f.text;
+        let   i      = 0;
+        setTimeout(function step() {
+          kaomoji.textContent = base + append.slice(0, ++i);
+          if (i < append.length) {
+            setTimeout(step, spd);
+          } else {
+            setTimeout(tick, 700); // pause after typing finishes
+          }
+        }, 350); // brief pause before typing starts
+        return;
+      }
     }, 80);
 
-    setTimeout(tick, f.ms);
+    // typewriter frames schedule themselves — skip outer timer
+    if (!f.typewriter) {
+      setTimeout(tick, f.ms);
+    }
   }
 
   setTimeout(tick, 100);
