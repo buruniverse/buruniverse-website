@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buruniverse</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #0c0b0a;
+      --text:   #d4d0c8;
+      --dim:    rgba(212, 208, 200, 0.38);
+      --accent: #8ba4d4;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      /* monospace that renders half-width kana nicely */
+      font-family: 'Courier New', 'Noto Sans Mono', 'MS Gothic', monospace;
+      overflow: hidden;
+    }
+
+    /* ── Loading screen ─────────────────────────────── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      overflow: hidden;       /* rush frame can bleed off edges */
+      z-index: 100;
+      background: var(--bg);
+      transition: opacity 0.9s ease;
+    }
+    #loader.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #kaomoji {
+      /* clamp: min 13px · fluid 3.5vw · max 21px */
+      font-size: clamp(13px, 3.5vw, 21px);
+      white-space: pre;
+      letter-spacing: 0;
+      position: absolute;
+      left: 0;
+      /* position snaps instantly for left-edge frames */
+    }
+    /* centered phase: smooth spring into place */
+    #kaomoji.is-centered {
+      left: 50% !important;
+      transform: translateX(-50%);
+      transition: left 0.22s cubic-bezier(0.34, 1.4, 0.64, 1),
+                  transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    /* ── Main page (hidden until loader done) ───────── */
+    #main {
+      position: fixed;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease 0.25s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.6rem;
+      padding: 2rem;
+    }
+    #main.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* chat box */
+    .chat-wrap {
+      width: min(92%, 480px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .chat-label {
+      font-size: clamp(15px, 3.8vw, 20px);
+      text-align: center;
+      letter-spacing: 0.03em;
+    }
+    .chat-input {
+      background: rgba(212,208,200,0.05);
+      border: 1px solid var(--dim);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: clamp(13px, 3.2vw, 16px);
+      width: 100%;
+      outline: none;
+      transition: border-color 0.25s;
+    }
+    .chat-input::placeholder { color: var(--dim); }
+    .chat-input:focus { border-color: var(--accent); }
+
+    /* menu toggle */
+    .menu-toggle {
+      font-size: clamp(12px, 2.8vw, 15px);
+      color: var(--dim);
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      user-select: none;
+      transition: color 0.2s;
+    }
+    .menu-toggle:hover { color: var(--text); }
+
+    /* slide-down menu */
+    .menu-drawer {
+      width: min(92%, 480px);
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.35s ease;
+      opacity: 0;
+    }
+    .menu-drawer.open {
+      max-height: 400px;
+      opacity: 1;
+    }
+    .menu-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      padding: 0.6rem 0 0.2rem;
+      list-style: none;
+      font-size: clamp(13px, 3vw, 16px);
+    }
+    .menu-list a {
+      color: var(--dim);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .menu-list a:hover { color: var(--text); }
+
+    /* footer line */
+    .footer-line {
+      position: fixed;
+      bottom: 1.2rem;
+      font-size: clamp(10px, 2.2vw, 12px);
+      color: rgba(212,208,200,0.2);
+      letter-spacing: 0.12em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Loading screen ──────────────────────────────────── -->
+<div id="loader">
+  <div id="kaomoji">|</div>
+</div>
+
+<!-- ── Main page ───────────────────────────────────────── -->
+<div id="main">
+  <div class="chat-wrap">
+    <div class="chat-label">(*･ω･*) おしゃべりする？💬</div>
+    <input class="chat-input" type="text" placeholder="なにか聞いてみて…">
+  </div>
+
+  <div class="menu-toggle" id="menu-toggle">▼ﾋﾗｸ</div>
+
+  <div class="menu-drawer" id="menu-drawer">
+    <ul class="menu-list">
+      <li><a href="/prototypes">≐ Prototypes φ(-ω-。`)</a></li>
+      <li><a href="/games">∞ Games ¶(´ω´)₉</a></li>
+      <li><a href="/posts">Σ Books of thoughts (˜ω˜)ₒoO</a></li>
+      <li><a href="/experiments">μ Experiments ~(=^·ω·^)</a></li>
+      <li><a href="/about">About Me..</a></li>
+    </ul>
+  </div>
+
+  <div class="footer-line">2026 Buruniverse · EN / JA</div>
+</div>
+
+<script>
+  // ── Animation frames ────────────────────────────────────
+  const frames = [
+    { text: '|',                                              centered: false, ms: 360 },
+    { text: ' | )',                                           centered: false, ms: 300 },
+    { text: ' |ω･ )…',                                       centered: false, ms: 520 },
+    { text: ' |ω･ )ﾉｼ𓈒𓏸 ｺﾝﾆﾁﾊ',                            centered: false, ms: 760 },
+    { text: ' | ω･)っ…ｯｽ',                                   centered: false, ms: 360 },
+    { text: ' |( っ･ω･)っ…ｽｽｯ',                              centered: false, ms: 220 },
+    { text: ' |-=≡((((っ･ω･)っﾀﾞｯ',                          centered: false, ms: 160 },
+    { text: '-=≡((((((((((((っ･ω･)っﾋﾞｭｰｰｰｰｰｰﾝ',             centered: false, ms: 200 },
+    { text: '⊂( ･ω･ )⊃ｼｬｯ…!',                               centered: true,  ms: 520 },
+    { text: 'ｼﾞｬｰﾝ! ‧₊˚⋅\\└( ･ω･ )┘///‧₊˚⋅ｲﾗｯｼｬｲ!',        centered: true,  ms: 920 },
+    { text: 'ｼﾞｭﾝﾋﾞｽﾙﾖ~ (。-ω-).｡…',                        centered: true,  ms: 1100 },
+    { text: 'ﾁｮｯﾄﾏｯﾃﾅ~ (。-ω-).｡o …',                       centered: true,  ms: 1100 },
+    { text: 'ﾓｳｽｸﾞﾖ~ (。-ω-).｡oO …',                        centered: true,  ms: 1100 },
+    { text: '…(。•ω•) ﾊｯ!',                                  centered: true,  ms: 650 },
+    { text: '(*･∀･*)✧ ｵﾏﾀｾ~',                               centered: true,  ms: 900 },
+  ];
+
+  const loader   = document.getElementById('loader');
+  const kaomoji  = document.getElementById('kaomoji');
+  const main     = document.getElementById('main');
+
+  let idx = 0;
+
+  function tick() {
+    if (idx >= frames.length) {
+      // All frames done → cross-fade
+      loader.classList.add('fade-out');
+      setTimeout(() => {
+        loader.style.display = 'none';
+        main.classList.add('visible');
+      }, 950);
+      return;
+    }
+
+    const f = frames[idx++];
+    kaomoji.textContent = f.text;
+
+    if (f.centered) {
+      kaomoji.classList.add('is-centered');
+    } else {
+      kaomoji.classList.remove('is-centered');
+      kaomoji.style.transform = '';
+    }
+
+    setTimeout(tick, f.ms);
+  }
+
+  // tiny delay so the browser has painted before we start
+  setTimeout(tick, 80);
+
+  // ── ▼ﾋﾗｸ / ▲ﾄｼﾞﾙ toggle ─────────────────────────────
+  const toggle = document.getElementById('menu-toggle');
+  const drawer = document.getElementById('menu-drawer');
+  let   open   = false;
+
+  toggle.addEventListener('click', () => {
+    open = !open;
+    drawer.classList.toggle('open', open);
+    toggle.textContent = open ? '▲ﾄｼﾞﾙ' : '▼ﾋﾗｸ';
+  });
+</script>
+
+</body>
+</html>
