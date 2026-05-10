@@ -102,6 +102,8 @@
       font-size: clamp(15px, 3.8vw, 20px);
       text-align: center;
       letter-spacing: 0.03em;
+      opacity: 0;                    /* hidden until kaomoji arrives */
+      transition: opacity 0.25s ease;
     }
     .chat-input {
       background: rgba(26,25,23,0.04);
@@ -178,7 +180,7 @@
 <!-- ── Main page ───────────────────────────────────────── -->
 <div id="main">
   <div class="chat-wrap">
-    <div class="chat-label">(*･ω･*) おしゃべりする？💬</div>
+    <div class="chat-label">(*･ω･*)&lt; おしゃべりする？💬</div>
     <input class="chat-input" type="text" placeholder="なにか聞いてみて…">
   </div>
 
@@ -310,7 +312,9 @@
           if (i < append.length) {
             setTimeout(step, spd);
           } else {
-            setTimeout(tick, 700); // pause after typing finishes
+            // last frame → move to final position instead of fading
+            const next = idx >= frames.length ? moveToFinalPosition : tick;
+            setTimeout(next, 700);
           }
         }, 350); // brief pause before typing starts
         return;
@@ -321,6 +325,34 @@
     if (!f.typewriter) {
       setTimeout(tick, f.ms);
     }
+  }
+
+  // ── Final position animation ──────────────────────────
+  function moveToFinalPosition() {
+    const chatLabel = document.querySelector('.chat-label');
+    const labelRect = chatLabel.getBoundingClientRect();
+    const kaoRect   = kaomoji.getBoundingClientRect();
+
+    // center-to-center vertical distance
+    const deltaY = (labelRect.top + labelRect.height / 2)
+                 - (kaoRect.top   + kaoRect.height  / 2);
+
+    // animate kaomoji to chat-label position
+    kaomoji.style.transition = 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
+    kaomoji.style.transform  = `translateX(-50%) translateY(${deltaY}px)`;
+
+    // after movement: instant swap (no fade)
+    setTimeout(() => {
+      main.style.transition    = 'none';
+      main.style.opacity       = '1';
+      main.style.pointerEvents = 'all';
+
+      // tiny delay: hide loader → reveal chat-label text
+      setTimeout(() => {
+        loader.style.display    = 'none';
+        chatLabel.style.opacity = '1';
+      }, 40);
+    }, 750);
   }
 
   setTimeout(tick, 100);
