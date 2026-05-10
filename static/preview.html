@@ -333,14 +333,16 @@
 
     // after movement: instant swap (no fade)
     setTimeout(() => {
-      main.style.transition    = 'none';
-      main.style.opacity       = '1';
-      main.style.pointerEvents = 'all';
+      // make everything ready (behind the loader)
+      main.style.transition      = 'none';
+      main.style.opacity         = '1';
+      main.style.pointerEvents   = 'all';
+      chatLabel.style.transition = 'none';
+      chatLabel.style.opacity    = '1';
 
-      // tiny delay: hide loader → reveal chat-label text
+      // then hide loader — all of #main appears at once
       setTimeout(() => {
-        loader.style.display    = 'none';
-        chatLabel.style.opacity = '1';
+        loader.style.display = 'none';
       }, 40);
     }, 750);
   }
