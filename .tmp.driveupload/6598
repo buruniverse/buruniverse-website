@@ -221,9 +221,9 @@
     { text: '⊂( ･ω･ )⊃ …ｼｬｯ…!',                                                                       centered: true,  ms: 1400 },
 
     // ── tada! ─────────────────────────────────────────────
-    { text: '　　‧₊˚⋅\\\└( ･ω･ )┘///‧₊˚⋅',                                                              centered: true,  ms: 900 },
-    { text: 'ﾖｳｺｿ ‧₊˚⋅\\\└( ･ω･ )┘///‧₊˚⋅',                                                            centered: true,  ms: 900 },
-    { text: 'ﾖｳｺｿ ‧₊˚⋅\\\└( ･ω･ )┘///‧₊˚⋅ｲﾗｯｼｬｲ!!',                                                   centered: true,  ms: 1500 },
+    { text: '　　  ‧₊˚⋅\└( ･ω･ )┘/‧₊˚⋅',                                                              centered: true,  ms: 900 },
+    { text: 'ﾖｳｺｿ ‧₊˚⋅\\└( ･ω･ )┘//‧₊˚⋅',                                                            centered: true,  ms: 900 },
+    { text: 'ﾖｳｺｿ!‧₊˚⋅\\\└( ･ω･ )┘///‧₊˚⋅ｲﾗｯｼｬｲ!!',                                                   centered: true,  ms: 1800 },
 
     // ── loading wait (API or model loading goes here) ─────
     { text: 'ｼﾞｭﾝﾋﾞｽﾙﾖ~ (。-ω-).｡…',                        centered: true,  ms: 2200 },
