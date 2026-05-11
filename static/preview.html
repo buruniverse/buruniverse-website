@@ -201,7 +201,7 @@
     <input class="chat-input" type="text" placeholder="なにか聞いてみて…">
   </div>
 
-  <div class="menu-toggle" id="menu-toggle">▼ﾋﾗｸ</div>
+  <div class="menu-toggle" id="menu-toggle">▼ﾒﾆｭｰﾋﾗｸ</div>
 
   <div class="menu-drawer" id="menu-drawer">
     <ul class="menu-list">
@@ -362,7 +362,7 @@
 
   setTimeout(tick, 100);
 
-  // ── ▼ﾋﾗｸ / ▲ﾄｼﾞﾙ toggle ──────────────────────────────
+  // ── ▼ﾒﾆｭｰﾋﾗｸ / ▲ﾄｼﾞﾙ toggle ──────────────────────────────
   const toggle = document.getElementById('menu-toggle');
   const drawer = document.getElementById('menu-drawer');
   let   open   = false;
@@ -370,7 +370,7 @@
   toggle.addEventListener('click', () => {
     open = !open;
     drawer.classList.toggle('open', open);
-    toggle.textContent = open ? '▲ﾄｼﾞﾙ' : '▼ﾋﾗｸ';
+    toggle.textContent = open ? '▲ﾄｼﾞﾙ' : '▼ﾒﾆｭｰﾋﾗｸ';
   });
 </script>
 

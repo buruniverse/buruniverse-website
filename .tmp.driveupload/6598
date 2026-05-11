@@ -40,7 +40,7 @@
     }
 
     #kaomoji {
-      font-size: clamp(13px, 3.5vw, 21px);
+      font-size: clamp(18px, 3.5vw, 21px);
       white-space: pre;
       letter-spacing: 0;
       position: absolute;
@@ -61,6 +61,20 @@
     }
     #kaomoji.is-shaking {
       animation: kaomoji-shake 0.1s linear infinite;
+    }
+
+    /* ── Logo (top center, always visible) ──────────── */
+    #logo {
+      position: fixed;
+      top: 1.6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 66vw;             /* スマホ: 画面の66% */
+      pointer-events: none;
+      z-index: 200;
+    }
+    @media (min-width: 768px) {
+      #logo { width: 20vw; }   /* PC: 画面の20% */
     }
 
     /* centered phase: spring snap into center */
@@ -99,7 +113,7 @@
       gap: 0.8rem;
     }
     .chat-label {
-      font-size: clamp(15px, 3.8vw, 20px);
+      font-size: clamp(16px, 3.8vw, 20px);
       text-align: center;
       letter-spacing: 0.03em;
       opacity: 0;                    /* hidden until kaomoji arrives */
@@ -112,7 +126,7 @@
       padding: 0.75rem 1rem;
       color: var(--text);
       font-family: inherit;
-      font-size: clamp(13px, 3.2vw, 16px);
+      font-size: clamp(16px, 3.2vw, 16px);
       width: 100%;
       outline: none;
       transition: border-color 0.25s;
@@ -122,7 +136,7 @@
 
     /* menu toggle */
     .menu-toggle {
-      font-size: clamp(12px, 2.8vw, 15px);
+      font-size: clamp(16px, 2.8vw, 16px);
       color: var(--dim);
       cursor: pointer;
       letter-spacing: 0.08em;
@@ -150,7 +164,7 @@
       gap: 0.55rem;
       padding: 0.6rem 0 0.2rem;
       list-style: none;
-      font-size: clamp(13px, 3vw, 16px);
+      font-size: clamp(16px, 3vw, 16px);
     }
     .menu-list a {
       color: var(--dim);
@@ -172,6 +186,9 @@
 </head>
 <body>
 
+<!-- ── Logo (top center, always visible) ──────────────────── -->
+<img id="logo" src="/images/logo_new.PNG" alt="Buruniverse">
+
 <!-- ── Loading screen ──────────────────────────────────── -->
 <div id="loader">
   <div id="kaomoji">|</div>
@@ -184,7 +201,7 @@
     <input class="chat-input" type="text" placeholder="なにか聞いてみて…">
   </div>
 
-  <div class="menu-toggle" id="menu-toggle">▼ﾋﾗｸ</div>
+  <div class="menu-toggle" id="menu-toggle">▼ﾒﾆｭｰﾋﾗｸ</div>
 
   <div class="menu-drawer" id="menu-drawer">
     <ul class="menu-list">
@@ -200,8 +217,17 @@
 </div>
 
 <script>
+  // ── Screen-relative positioning helper ───────────────────
+  // 画面幅の fraction (0.0〜1.0) の位置にテキストの先頭を置く
+  // フォントサイズを clamp(13px, 3.5vw, 21px) で近似して算出
+  const _fs = Math.min(21, Math.max(18, window.innerWidth * 0.035));
+  const _cw = _fs * 0.55; // 半角1文字あたりの幅 (px)
+  function atX(text, frac) {
+    const n = Math.max(0, Math.round((window.innerWidth * frac) / _cw));
+    return ' '.repeat(n) + text;
+  }
+
   // ── Animation frames ─────────────────────────────────────
-  // Timings doubled + intermediate frames added for smoothness
   const frames = [
 
     // ── peek from left edge ───────────────────────────────
@@ -213,12 +239,12 @@
     { text: ' | ω･)っ…ｯｽ',                                   centered: false, ms: 700 },
     { text: ' |(っ･ω･)っ…ｽｽｯ',                              centered: false, ms: 720 },
 
-    // ── dash ──────────────────────────────────────────────
-    { text: ' |-=≡((っ･ω･)っﾀﾞｯ',                                                                        centered: false, ms: 720 },
-    { text: ' |-=≡(((((((((((((っ･ω･)っﾋﾞｭｩｩｩｩｰｰｰ',                                                 centered: false, ms: 600 },
-    { text: '     　  　=≡(((((((((((((((((((((っ･ω･)っｰｰｰｰｰｩｩｩｩｰｰｰｰｰ',                            centered: false, ms: 600 },
-    { text: '              　　   　 ≡((((((((((((((((((((((((((((っ･ω･)っｰｰｰｰｰｰｰｰｰｰｰｰﾝ',     centered: false, ms: 900 },
-    { text: '　　　　　　　　　　　　　　　　　　　　　　　　　　　　　      -=≡⊂(･`ω･´⊂)))))ｷｷｷｷｰｰ!!',    centered: false, ms: 1100 },
+    // ── dash (atX で画面幅に対する相対位置を指定) ────────────
+    { text: ' |-=≡((っ･ω･)っﾀﾞｯ',                                    centered: false, ms: 720 },
+    { text: atX('-=≡((((((((っ･ω･)っﾋﾞｭｩｩｩｰｰｰ',      0.18),          centered: false, ms: 600 },
+    { text: atX('=≡(((((((((((((((っ･ω･)っｰｰｰｰｩｩｰｰｰ', 0.38),          centered: false, ms: 600 },
+    { text: atX('≡((((((((((((((((((っ･ω･)っｰｰｰｰｰｰｰﾝ', 0.58),          centered: false, ms: 900 },
+    { text: atX('-=≡⊂(･`ω･´⊂)))))ｷｷｷｷｰｰ!!',          0.35),          centered: false, ms: 1100 },
 
     // ── land center ───────────────────────────────────────　
     { text: '⊂( ･ω･ )⊃',                                                                       centered: true,  ms: 1400, noSpring: true },
@@ -336,7 +362,7 @@
 
   setTimeout(tick, 100);
 
-  // ── ▼ﾋﾗｸ / ▲ﾄｼﾞﾙ toggle ──────────────────────────────
+  // ── ▼ﾒﾆｭｰﾋﾗｸ / ▲ﾄｼﾞﾙ toggle ──────────────────────────────
   const toggle = document.getElementById('menu-toggle');
   const drawer = document.getElementById('menu-drawer');
   let   open   = false;
@@ -344,7 +370,7 @@
   toggle.addEventListener('click', () => {
     open = !open;
     drawer.classList.toggle('open', open);
-    toggle.textContent = open ? '▲ﾄｼﾞﾙ' : '▼ﾋﾗｸ';
+    toggle.textContent = open ? '▲ﾄｼﾞﾙ' : '▼ﾒﾆｭｰﾋﾗｸ';
   });
 </script>
 
