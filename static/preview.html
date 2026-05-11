@@ -72,6 +72,12 @@
       width: 66vw;             /* スマホ: 画面の66% */
       pointer-events: none;
       z-index: 200;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.35s ease;
+    }
+    #logo.fly-out {
+      transform: translateX(-50%) translateY(-160%);
+      opacity: 0;
     }
     @media (min-width: 768px) {
       #logo { width: 20vw; }   /* PC: 画面の20% */
@@ -145,25 +151,14 @@
     }
     .menu-toggle:hover { color: var(--text); }
 
-    /* メニューラッパー: トグルを基準に下へ展開 */
-    .menu-wrap {
-      position: relative;
-    }
-
     /* slide-down menu */
     .menu-drawer {
-      position: absolute;
-      top: calc(100% + 0.4rem);
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(92vw, 480px);
+      width: min(92%, 480px);
       overflow: hidden;
       max-height: 0;
       transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
                   opacity 0.35s ease;
       opacity: 0;
-      background: var(--bg);
-      z-index: 10;
     }
     .menu-drawer.open {
       max-height: 60vh;
@@ -287,7 +282,6 @@
     <input class="chat-input" type="text" placeholder="なにか聞いてみて…">
   </div>
 
-  <div class="menu-wrap">
   <div class="menu-toggle" id="menu-toggle">▼ﾒﾆｭｰﾋﾗｸ</div>
 
   <div class="menu-drawer" id="menu-drawer">
@@ -317,7 +311,6 @@
       <a href="/privacy">Privacy Policy</a>
       <a href="/legal">特定商取引法について</a>
     </div>
-  </div>
   </div>
 
   <div class="footer-line">©︎2026 ∴ Buruniverse ∵ </div>
@@ -469,13 +462,15 @@
   setTimeout(tick, 100);
 
   // ── ▼ﾒﾆｭｰﾋﾗｸ / ▲ﾄｼﾞﾙ toggle ──────────────────────────────
-  const toggle = document.getElementById('menu-toggle');
-  const drawer = document.getElementById('menu-drawer');
-  let   open   = false;
+  const toggle  = document.getElementById('menu-toggle');
+  const drawer  = document.getElementById('menu-drawer');
+  const logo    = document.getElementById('logo');
+  let   open    = false;
 
   toggle.addEventListener('click', () => {
     open = !open;
     drawer.classList.toggle('open', open);
+    logo.classList.toggle('fly-out', open);
     toggle.textContent = open ? '▲ﾄｼﾞﾙ' : '▼ﾒﾆｭｰﾋﾗｸ';
     if (open) updateActiveItem();
   });
