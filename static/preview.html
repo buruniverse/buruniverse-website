@@ -214,8 +214,17 @@
 </div>
 
 <script>
+  // ── Screen-relative positioning helper ───────────────────
+  // 画面幅の fraction (0.0〜1.0) の位置にテキストの先頭を置く
+  // フォントサイズを clamp(13px, 3.5vw, 21px) で近似して算出
+  const _fs = Math.min(21, Math.max(13, window.innerWidth * 0.035));
+  const _cw = _fs * 0.55; // 半角1文字あたりの幅 (px)
+  function atX(text, frac) {
+    const n = Math.max(0, Math.round((window.innerWidth * frac) / _cw));
+    return ' '.repeat(n) + text;
+  }
+
   // ── Animation frames ─────────────────────────────────────
-  // Timings doubled + intermediate frames added for smoothness
   const frames = [
 
     // ── peek from left edge ───────────────────────────────
@@ -227,12 +236,12 @@
     { text: ' | ω･)っ…ｯｽ',                                   centered: false, ms: 700 },
     { text: ' |(っ･ω･)っ…ｽｽｯ',                              centered: false, ms: 720 },
 
-    // ── dash ──────────────────────────────────────────────
-    { text: ' |-=≡((っ･ω･)っﾀﾞｯ',                                                                        centered: false, ms: 720 },
-    { text: ' |-=≡(((((((((((((っ･ω･)っﾋﾞｭｩｩｩｩｰｰｰ',                                                 centered: false, ms: 600 },
-    { text: '     　  　=≡(((((((((((((((((((((っ･ω･)っｰｰｰｰｰｩｩｩｩｰｰｰｰｰ',                            centered: false, ms: 600 },
-    { text: '              　　   　 ≡((((((((((((((((((((((((((((っ･ω･)っｰｰｰｰｰｰｰｰｰｰｰｰﾝ',     centered: false, ms: 900 },
-    { text: '　　　　　　　　　　　　　　　　　　　　　　　　　　　　　      -=≡⊂(･`ω･´⊂)))))ｷｷｷｷｰｰ!!',    centered: false, ms: 1100 },
+    // ── dash (atX で画面幅に対する相対位置を指定) ────────────
+    { text: ' |-=≡((っ･ω･)っﾀﾞｯ',                                    centered: false, ms: 720 },
+    { text: atX('-=≡((((((((っ･ω･)っﾋﾞｭｩｩｩｰｰｰ',      0.18),          centered: false, ms: 600 },
+    { text: atX('=≡(((((((((((((((っ･ω･)っｰｰｰｰｩｩｰｰｰ', 0.38),          centered: false, ms: 600 },
+    { text: atX('≡((((((((((((((((((っ･ω･)っｰｰｰｰｰｰｰﾝ', 0.58),          centered: false, ms: 900 },
+    { text: atX('-=≡⊂(･`ω･´⊂)))))ｷｷｷｷｰｰ!!',          0.35),          centered: false, ms: 1100 },
 
     // ── land center ───────────────────────────────────────　
     { text: '⊂( ･ω･ )⊃',                                                                       centered: true,  ms: 1400, noSpring: true },
