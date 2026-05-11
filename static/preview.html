@@ -63,27 +63,6 @@
       animation: kaomoji-shake 0.1s linear infinite;
     }
 
-    /* ── Logo ───────────────────────────────────────── */
-    #logo {
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: calc(50% + 3rem);   /* above the centered kaomoji */
-      width: clamp(180px, 38vw, 380px);
-      opacity: 0;
-      clip-path: inset(100% 0 0 0); /* hidden, reveals bottom-to-top */
-      pointer-events: none;
-      z-index: 50; /* above main, below loader */
-    }
-    @keyframes logo-build-up {
-      0%   { clip-path: inset(100% 0 0 0); opacity: 0; }
-      8%   { opacity: 1; }
-      100% { clip-path: inset(0% 0 0 0);   opacity: 1; }
-    }
-    #logo.reveal {
-      animation: logo-build-up 1.8s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
-    }
-
     /* centered phase: spring snap into center */
     #kaomoji.is-centered {
       left: 50% !important;
@@ -193,9 +172,6 @@
 </head>
 <body>
 
-<!-- ── Logo (outside loader so it persists after loader hides) ── -->
-<img id="logo" src="/images/logo.svg" alt="Buruniverse">
-
 <!-- ── Loading screen ──────────────────────────────────── -->
 <div id="loader">
   <div id="kaomoji">|</div>
@@ -252,7 +228,7 @@
     { text: '‧₊˚⋅\\\\\\ﾖｳｺｿ!└( ･ω･ )┘ｲﾗｯｼｬｲ!///‧₊˚⋅',                                                centered: true,  ms: 1800 },
 
     // ── loading wait (API or model loading goes here) ─────
-    { text: 'ｼﾞｭﾝﾋﾞｽﾙﾖ~ (。-ω-).｡…',                        centered: true,  ms: 1800, showLogo: true },
+    { text: 'ｼﾞｭﾝﾋﾞｽﾙﾖ~ (。-ω-).｡…',                        centered: true,  ms: 1800 },
     { text: 'ﾁｮｯﾄﾏｯﾃﾅ~ (。-ω-).｡o …',                       centered: true,  ms: 1800 },
     { text: 'ﾓｳｽｸﾞﾖ~ (。-ω-).｡oO …',                        centered: true,  ms: 1800 },
     { text: '…(。•ω•) ﾊｯ!',                                  centered: true,  ms: 1300 },
@@ -301,11 +277,6 @@
 
       // shake on/off
       kaomoji.classList.toggle('is-shaking', !!f.shake);
-
-      // logo reveal
-      if (f.showLogo) {
-        document.getElementById('logo').classList.add('reveal');
-      }
 
       // typewriter mode
       if (f.typewriter) {
