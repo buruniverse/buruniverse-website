@@ -63,6 +63,17 @@
       animation: kaomoji-shake 0.1s linear infinite;
     }
 
+    /* ── Logo (top center, always visible) ──────────── */
+    #logo {
+      position: fixed;
+      top: 1.6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: clamp(100px, 20vw, 200px);
+      pointer-events: none;
+      z-index: 200;
+    }
+
     /* centered phase: spring snap into center */
     #kaomoji.is-centered {
       left: 50% !important;
@@ -171,6 +182,9 @@
   </style>
 </head>
 <body>
+
+<!-- ── Logo (top center, always visible) ──────────────────── -->
+<img id="logo" src="/images/logo.svg" alt="Buruniverse">
 
 <!-- ── Loading screen ──────────────────────────────────── -->
 <div id="loader">
