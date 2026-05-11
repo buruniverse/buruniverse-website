@@ -40,7 +40,7 @@
     }
 
     #kaomoji {
-      font-size: clamp(13px, 3.5vw, 21px);
+      font-size: clamp(14px, 3.5vw, 21px);
       white-space: pre;
       letter-spacing: 0;
       position: absolute;
@@ -69,9 +69,12 @@
       top: 1.6rem;
       left: 50%;
       transform: translateX(-50%);
-      width: clamp(100px, 20vw, 200px);
+      width: 33.33vw;          /* スマホ: 画面の1/3 */
       pointer-events: none;
       z-index: 200;
+    }
+    @media (min-width: 768px) {
+      #logo { width: 20vw; }   /* PC: 画面の20% */
     }
 
     /* centered phase: spring snap into center */
@@ -217,7 +220,7 @@
   // ── Screen-relative positioning helper ───────────────────
   // 画面幅の fraction (0.0〜1.0) の位置にテキストの先頭を置く
   // フォントサイズを clamp(13px, 3.5vw, 21px) で近似して算出
-  const _fs = Math.min(21, Math.max(13, window.innerWidth * 0.035));
+  const _fs = Math.min(21, Math.max(14, window.innerWidth * 0.035));
   const _cw = _fs * 0.55; // 半角1文字あたりの幅 (px)
   function atX(text, frac) {
     const n = Math.max(0, Math.round((window.innerWidth * frac) / _cw));
