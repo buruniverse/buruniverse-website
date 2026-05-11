@@ -237,7 +237,7 @@
 
     // ── get ready to run ──────────────────────────────────
     { text: ' | ω･)っ…ｯｽ',                                   centered: false, ms: 700 },
-    { text: ' |(っ･ω･)っ…ｽｽｯ',                              centered: false, ms: 720 },
+    { text: ' |(っ･ω･)っ…ｽｽｯ',                              centered: false, ms: 800 },
 
     // ── dash (atX で画面幅に対する相対位置を指定) ────────────
     { text: ' |-=≡((っ･ω･)っﾀﾞｯ',                                    centered: false, ms: 720 },
