@@ -65,7 +65,7 @@
 
     /* ── Logo ───────────────────────────────────────── */
     #logo {
-      position: absolute;
+      position: fixed;
       left: 50%;
       transform: translateX(-50%);
       bottom: calc(50% + 3rem);   /* above the centered kaomoji */
@@ -73,6 +73,7 @@
       opacity: 0;
       clip-path: inset(100% 0 0 0); /* hidden, reveals bottom-to-top */
       pointer-events: none;
+      z-index: 50; /* above main, below loader */
     }
     @keyframes logo-build-up {
       0%   { clip-path: inset(100% 0 0 0); opacity: 0; }
@@ -192,9 +193,11 @@
 </head>
 <body>
 
+<!-- ── Logo (outside loader so it persists after loader hides) ── -->
+<img id="logo" src="/images/logo.svg" alt="Buruniverse">
+
 <!-- ── Loading screen ──────────────────────────────────── -->
 <div id="loader">
-  <img id="logo" src="/images/logo.png" alt="Buruniverse">
   <div id="kaomoji">|</div>
 </div>
 
