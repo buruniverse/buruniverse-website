@@ -155,24 +155,99 @@
       opacity: 0;
     }
     .menu-drawer.open {
-      max-height: 400px;
+      max-height: 60vh;
+      overflow-y: auto;
       opacity: 1;
     }
+
+    /* メインメニュー */
     .menu-list {
       display: flex;
       flex-direction: column;
       gap: 0.55rem;
-      padding: 0.6rem 0 0.2rem;
+      padding: 0.8rem 0 0.6rem;
       list-style: none;
       font-size: clamp(16px, 3vw, 16px);
     }
+    .menu-list li {
+      position: relative;
+      padding-left: 1.4em;
+    }
+    .menu-list li::before {
+      content: '▶︎';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.7em;
+      opacity: 0;
+      transition: opacity 0.15s;
+      color: var(--text);
+      pointer-events: none;
+    }
+    /* デスクトップ: ホバーで表示 */
+    @media (hover: hover) {
+      .menu-list li:hover::before { opacity: 1; }
+    }
+    /* スマホ: JS が .active を付与 */
+    .menu-list li.active::before { opacity: 1; }
+
     .menu-list a {
-      color: var(--dim);
+      color: var(--text);
       text-decoration: none;
       letter-spacing: 0.06em;
       transition: color 0.2s;
     }
-    .menu-list a:hover { color: var(--text); }
+    .menu-list a:hover { opacity: 0.6; }
+
+    /* SNSアイコン行 */
+    .menu-sns {
+      display: flex;
+      gap: 0.8rem;
+      padding: 0.8rem 0 0.6rem 1.4em;
+    }
+    .sns-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--dim);
+      display: inline-block;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .sns-dot:hover { border-color: var(--text); }
+
+    /* コーヒー・コンタクト */
+    .menu-extras {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      padding: 0.4rem 0 0.8rem 1.4em;
+      font-size: clamp(16px, 3vw, 16px);
+    }
+    .menu-extras a, .menu-extras div {
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+    }
+    .menu-extras a:hover { opacity: 0.6; }
+
+    /* Privacy Policy以下: 薄く小さく */
+    .menu-legal {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      padding: 0.6rem 0 1rem 1.4em;
+      font-size: 14px;
+      color: var(--dim);
+      border-top: 1px solid rgba(26,25,23,0.1);
+    }
+    .menu-legal a {
+      color: var(--dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .menu-legal a:hover { color: var(--text); }
 
     /* footer line */
     .footer-line {
@@ -205,15 +280,34 @@
 
   <div class="menu-drawer" id="menu-drawer">
     <ul class="menu-list">
-      <li><a href="/prototypes">≐ Prototypes φ(-ω-。`)</a></li>
-      <li><a href="/games">∞ Games ¶(´ω´)₉</a></li>
-      <li><a href="/posts">Σ Books of thoughts (˜ω˜)ₒoO</a></li>
-      <li><a href="/experiments">μ Experiments ~(=^·ω·^)</a></li>
-      <li><a href="/about">About Me..</a></li>
+      <li><a href="/about">Ψ＿サイトについて</a></li>
+      <li><a href="/topology">✧＿意識トポロジー</a></li>
+      <li><a href="/books">Ω＿ブログ本棚</a></li>
+      <li><a href="/stretch">࿐＿ストレッチ&amp;倒立スペース</a></li>
+      <li><a href="/games">∞＿ミニゲーム</a></li>
+      <li><a href="/experiments">μ＿実験のカケラ</a></li>
     </ul>
+
+    <div class="menu-sns">
+      <span class="sns-dot"></span>
+      <span class="sns-dot"></span>
+      <span class="sns-dot"></span>
+      <span class="sns-dot"></span>
+      <span class="sns-dot"></span>
+    </div>
+
+    <div class="menu-extras">
+      <a href="/coffee">→ サイト主にコーヒーを奢る ₍₍ (ง ˘ω˘ )ว ⁾⁾☕️</a>
+      <div>Contact - dummy@mail.com</div>
+    </div>
+
+    <div class="menu-legal">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/legal">特定商取引法について</a>
+    </div>
   </div>
 
-  <div class="footer-line">2026 Buruniverse · EN / JA</div>
+  <div class="footer-line">©︎2026 ∴ Buruniverse ∵ </div>
 </div>
 
 <script>
@@ -370,7 +464,32 @@
     open = !open;
     drawer.classList.toggle('open', open);
     toggle.textContent = open ? '▲ﾄｼﾞﾙ' : '▼ﾒﾆｭｰﾋﾗｸ';
+    if (open) updateActiveItem();
   });
+
+  // ── スマホ: スクロールで▶︎を追従 ─────────────────────────
+  const menuItems = drawer.querySelectorAll('.menu-list li');
+
+  function updateActiveItem() {
+    // hover が使えるデバイス (PC) はCSSに任せる
+    if (window.matchMedia('(hover: hover)').matches) return;
+
+    const drawerRect = drawer.getBoundingClientRect();
+    const refY = drawerRect.top + 48; // ドロワー上端から少し下を基準に
+
+    let closest = null;
+    let minDist = Infinity;
+    menuItems.forEach(item => {
+      const rect = item.getBoundingClientRect();
+      const dist = Math.abs(rect.top - refY);
+      if (dist < minDist) { minDist = dist; closest = item; }
+    });
+
+    menuItems.forEach(i => i.classList.remove('active'));
+    if (closest) closest.classList.add('active');
+  }
+
+  drawer.addEventListener('scroll', updateActiveItem);
 </script>
 
 </body>
