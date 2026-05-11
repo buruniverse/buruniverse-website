@@ -240,7 +240,7 @@
     { text: ' |(っ･ω･)っ…ｽｽｯ',                              centered: false, ms: 850 },
 
     // ── dash (atX で画面幅に対する相対位置を指定) ────────────
-    { text: ' |-=≡((っ･ω･)っﾀﾞｯ',                                    centered: false, ms: 720 },
+    { text: ' |-=≡((っ･ω･)っ',                                    centered: false, ms: 720 },
     { text: atX('-=≡((((((((っ･ω･)っﾋﾞｭｩｩｩｰｰｰ',      0.18),          centered: false, ms: 600 },
     { text: atX('=≡(((((((((((((((((っ･ω･)っｰｰｰｰｩｩｰｰｰｰｰｰｰﾝ', 0.38),          centered: false, ms: 850 },
     { text: atX('    -==≡≡⊂(･`ω･´⊂)))ｷｷｰｰ!!',          0.35),          centered: false, ms: 1400 },
