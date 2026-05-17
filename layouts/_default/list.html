@@ -28,7 +28,7 @@
             display: flex;
             align-items: flex-end;
             justify-content: flex-start;
-            gap: 6px;
+            gap: 0;
             padding: 0 10vw 22vh;
             overflow-x: auto;
             overflow-y: hidden;
@@ -47,11 +47,16 @@
             transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1);
             position: relative;
             z-index: 1;
+            /* 本を重ねる: 右の本が左の本の前面に少し被さる */
+            margin-left: -34px;
+        }
+        .book-item:first-child {
+            margin-left: 0;
         }
         .book-item:hover,
         .book-item.tapped {
             transform: rotate(12deg) translateY(-14px);
-            z-index: 10;
+            z-index: 20;
         }
 
         .book-wrap {
@@ -96,24 +101,32 @@
             #shelf-view {
                 flex-wrap: wrap;
                 overflow-x: hidden;
-                overflow-y: auto;
                 overflow-y: scroll;
                 -webkit-overflow-scrolling: touch;
                 align-items: flex-start;
                 justify-content: flex-start;
-                padding: 14vh 4vw 28vh;
-                gap: 3px 1.5%;
+                /* left padding = book overlap量を吸収して1列目が画面端から始まるように */
+                padding: 14vh 4vw 28vh calc(4vw + 18px);
+                gap: 6px 0;
                 height: 100%;
             }
 
+            .book-item {
+                /* モバイルは少し控えめな重なり */
+                margin-left: -18px;
+            }
+            .book-item:first-child {
+                margin-left: 0;
+            }
+
             .book-wrap {
-                width: calc(23.5vw - 4px);
-                min-width: 60px;
-                max-width: 88px;
+                width: calc(24vw);
+                min-width: 58px;
+                max-width: 86px;
             }
 
             .book-label {
-                font-size: clamp(6px, 1.9vw, 9px);
+                font-size: clamp(6px, 1.8vw, 9px);
             }
 
             .book-item:hover,
