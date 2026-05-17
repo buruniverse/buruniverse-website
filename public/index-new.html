@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>∴ Buruniverse ∵</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:   #F4F2F0;
+      --fg:   #1a1917;
+      --dim:  rgba(26,25,23,0.35);
+      --font: 'Noto Sans Mono', monospace;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    #header {
+      position: fixed; top: 1.4rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 100; pointer-events: none; text-align: center;
+    }
+    #logo { display: block; width: clamp(180px, 30vw, 360px); margin: 0 auto; }
+    @media (max-width: 767px) { #logo { width: 66vw; } }
+
+    /* ── Lang ── */
+    #lang {
+      position: fixed; top: 1.2rem; right: 1.5rem;
+      font-size: 16px; color: var(--dim);
+      cursor: pointer; z-index: 100;
+      letter-spacing: .08em; user-select: none;
+      font-family: var(--font);
+    }
+    #lang:hover { color: var(--fg); }
+
+    /* ── Stage ──
+       Fixed viewport layer. When content is taller than viewport,
+       gains .scrollable and overflows internally.                  */
+    #stage {
+      position: fixed; left: 0; top: 0;
+      width: 100%; height: 100vh;
+      overflow: hidden;
+    }
+    /* .scrollable は JS で body スクロールに切替えるため不使用 */
+
+    /* ── Character particles ── */
+    .char {
+      position: absolute;
+      left: -9999px; top: -9999px;          /* off-screen until JS runs */
+      transform: translate(-50%, -50%);
+      line-height: 1; white-space: pre;
+      pointer-events: none; user-select: none;
+      transition: opacity .25s ease;
+      font-family: var(--font);
+    }
+    .char[data-t="s"] { font-size: clamp(24px, 3.2vw, 40px); font-weight: 600; }
+    .char[data-t="l"] { font-size: clamp(11px, 1.6vw, 16px); opacity: .68; }
+
+    /* spring: smooth snap animation */
+    .char.spring {
+      transition:
+        left .9s cubic-bezier(.22, .61, .36, 1),
+        top  .9s cubic-bezier(.22, .61, .36, 1),
+        transform .9s cubic-bezier(.22, .61, .36, 1),
+        opacity .25s ease;
+    }
+    .char.dim { opacity: .28 !important; }
+
+    /* ── Click targets ── */
+    .ctarget {
+      position: absolute; left: -9999px; top: -9999px;
+      transform: translate(-50%, -50%);
+      min-width: 70px; min-height: 54px;
+      display: none; cursor: pointer; pointer-events: none;
+    }
+
+    /* ── Kaomoji ── */
+    #kaomoji {
+      position: fixed; bottom: 3.8rem; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(12px, 1.8vw, 16px);
+      color: var(--dim); white-space: nowrap;
+      z-index: 50; pointer-events: none;
+      font-family: var(--font);
+    }
+
+    /* ── Subtitle ── */
+    #subtitle {
+      font-size: 16px; color: var(--dim);
+      letter-spacing: .04em; margin-top: .45rem;
+      pointer-events: none;
+    }
+    @media (max-width: 767px) { #subtitle { font-size: 13px; } }
+
+    /* ── Contact (above footer) ── */
+    #contact-link {
+      position: fixed; bottom: 2.4rem; left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px; color: var(--dim); z-index: 100;
+      font-family: var(--font); text-decoration: none;
+      letter-spacing: .06em;
+    }
+    #contact-link:hover { color: var(--fg); }
+
+    /* ── Footer ── */
+    #footer {
+      position: fixed; bottom: .8rem; left: 0; right: 0;
+      display: flex; justify-content: center; align-items: center;
+      gap: 1.2rem; font-size: 12px; color: var(--dim);
+      z-index: 100; flex-wrap: wrap; padding: 0 1rem;
+      font-family: var(--font);
+    }
+    #footer a { color: inherit; text-decoration: none; }
+    #footer a:hover { color: var(--fg); }
+    @media (max-width: 767px) { #footer { gap: .6rem; font-size: 12px; } }
+
+    /* ── Chat overlay ── */
+    #chat-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      z-index: 200; display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1.2rem;
+      font-family: var(--font);
+    }
+    #chat-overlay.active { display: flex; }
+    #chat-close { position: absolute; top: 1.4rem; right: 1.5rem; font-size: 12px; color: var(--dim); cursor: pointer; background: none; border: none; font-family: var(--font); }
+    #chat-close:hover { color: var(--fg); }
+    #chat-status { font-size: 13px; color: var(--dim); text-align: center; line-height: 2.2; }
+    #chat-box { width: min(520px,90vw); height: 52vh; border: 1px solid rgba(26,25,23,.14); border-radius: 6px; padding: 1rem; font-size: 13px; overflow-y: auto; display: none; }
+    #chat-input-row { display: none; gap: .6rem; width: min(520px,90vw); }
+    #chat-input { flex: 1; border: 1px solid rgba(26,25,23,.18); border-radius: 4px; padding: .5rem .8rem; font-size: 13px; background: var(--bg); color: var(--fg); font-family: var(--font); }
+    #chat-send { padding: .5rem 1rem; background: none; border: 1px solid rgba(26,25,23,.28); border-radius: 4px; font-size: 13px; cursor: pointer; color: var(--fg); font-family: var(--font); }
+    #chat-send:hover { border-color: var(--fg); }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <img id="logo" src="/images/logo_new.PNG" alt="∴ Buruniverse ∵"
+       onerror="this.style.display='none';document.getElementById('logo-text').style.display='block'">
+  <div id="logo-text" style="display:none;font-size:clamp(16px,3vw,26px);font-weight:600;letter-spacing:.15em;">∴ Buruniverse ∵</div>
+  <p id="subtitle">- Foggy Exploration Stuff-</p>
+</div>
+
+<div id="lang">☽  |  JP</div>
+<div id="stage"></div>
+<div id="kaomoji"></div>
+
+<a id="contact-link" href="mailto:dummy@mail.com">Contact</a>
+
+<div id="footer">
+  <a href="/privacy">Privacy Policy</a>
+  <a href="/tokusho">特定商取引法について</a>
+  <span>©︎2026 ∴ Buruniverse ∵</span>
+</div>
+
+<div id="chat-overlay">
+  <button id="chat-close">✕ 閉じる</button>
+  <div id="chat-status"></div>
+  <div id="chat-box"></div>
+  <div id="chat-input-row">
+    <input id="chat-input" type="text" placeholder="メッセージを入力…">
+    <button id="chat-send">送信</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Data ──────────────────────────────────────────────────
+const ITEMS = [
+  { id:'about',    sym:'Ψ',      lbl:'About',  href:'/about' },
+  { id:'topology', sym:'✦',      lbl:'Topology',  href:'/topology' },
+  { id:'blog',     sym:'λ',      lbl:'Blog Shlef',      href:'/blog' },
+  { id:'body',     sym:'≋',      lbl:'Body Space', href:'/body' },
+  { id:'drafts',   sym:'μ',      lbl:'Drafts',    href:'/drafts' },
+  { id:'social',   sym:'Σ',      lbl:'Social Media',    href:'/social' },
+  { id:'chat',     sym:'(·ω·)💬', lbl:"Let's Talk!",     href:'#', isChat:true },
+  { id:'games',    sym:'∞',      lbl:'Mini Game',      href:'/games' },
+  { id:'feed',     sym:'☕️',   lbl:'Feed Me',       href:'/feed' },
+];
+
+const KAOMOJI_SETS = [
+  { sleep:'(｡-ω-)𝗓𝗓Z',    wake:'(  °ω°)',    idle:'(｀･ω･´)' },
+  { sleep:'~~(˘ω˘)~~',     wake:'(‘ω’)!',   idle:'(•ω•)✧'   },
+  { sleep:'(*-ω-`*).ﾟ｡.',     wake:'(*•ω•　*)!',       idle:'(＊•̀ω•́＊)'  },
+  { sleep:'(_ ˘꒳˘)_ ...',      wake:'... ∑(_*´=ω=)_ !!',  idle:'(_ ˙꒳​˙)_' },
+  { sleep:'( _ _)zzz...',    wake:'...( ºωº)!!',    idle:'(｀◉ω◉´)'  },
+  { sleep:'_(┐「ε¦)_ ....',      wake:'_(┐「ε:)_ !!',  idle:'⭐︎└(┐　Lε:)┘⭐︎' },
+  { sleep:'(¦3[___]zzZ', wake:'(:3 _)= -=三[＿＿]',   idle:'┌(.ω.)┐' },
+];
+
+// Layouts: x%, y% per item. ALL r values are 0 (rotation only during drift).
+// Item order: [Ψ, ✦, λ, ≈, μ, Σ, (·ω·), ∞, ·+·]
+
+const DESKTOP_LAYOUTS = [
+  // 0 — 3×3 grid  (cols x:25/50/75 · rows y:30/52/74)
+  [{x:25,y:30},{x:50,y:30},{x:75,y:30},
+   {x:25,y:52},{x:50,y:52},{x:75,y:52},
+   {x:25,y:74},{x:50,y:74},{x:75,y:74}],
+
+  // 1 — two rows  (4 items y:37 · 5 items y:63)
+  [{x:30,y:63},{x:10,y:63},{x:15,y:37},
+   {x:85,y:37},{x:38,y:37},{x:70,y:63},
+   {x:50,y:63},{x:62,y:37},{x:90,y:63}],
+
+  // 2 — zigzag  (L x:20 / R x:74, y step 8%)
+  [{x:20,y:22},{x:74,y:30},{x:20,y:38},
+   {x:74,y:46},{x:20,y:54},{x:74,y:62},
+   {x:20,y:70},{x:74,y:76},{x:48,y:80}],
+
+  // 3 — diamond  (chat center, 4 cardinals + 4 diagonals)
+  [{x:22,y:50},{x:50,y:76},{x:78,y:50},
+   {x:50,y:24},{x:30,y:34},{x:70,y:34},
+   {x:50,y:50},{x:70,y:66},{x:30,y:66}],
+
+  // 4 — vertical list  (x:50 centered, y 18→80 step 8%)
+  [{x:50,y:18},{x:50,y:26},{x:50,y:34},
+   {x:50,y:42},{x:50,y:50},{x:50,y:58},
+   {x:50,y:66},{x:50,y:74},{x:50,y:80}],
+
+  // 5 — diagonal  (≈ top-left → λ bottom-right, step Δx10%/Δy8%)
+  [{x:28,y:34},{x:18,y:26},{x:88,y:80},
+   {x: 8,y:18},{x:38,y:42},{x:58,y:58},
+   {x:48,y:50},{x:68,y:66},{x:78,y:74}],
+
+  // 6 — horizontal row  (y:38, labels vertical below, x step ~9.5%)
+  [{x: 8,y:38},{x:19,y:38},{x:30,y:38},
+   {x:41,y:38},{x:52,y:38},{x:63,y:38},
+   {x:74,y:38},{x:84,y:38},{x:93,y:38}],
+];
+
+const MOBILE_LAYOUTS = [
+  // 0 — 2-col grid  (x:22/72, rows every 14%)
+  [{x:22,y:22},{x:72,y:22},{x:22,y:36},
+   {x:72,y:36},{x:22,y:50},{x:72,y:50},
+   {x:22,y:64},{x:72,y:64},{x:50,y:76}],
+
+  // 1 — alternating L/R  (x:20/72, step 7%)
+  [{x:20,y:22},{x:72,y:29},{x:20,y:36},
+   {x:72,y:43},{x:20,y:50},{x:72,y:57},
+   {x:20,y:64},{x:72,y:71},{x:50,y:77}],
+
+  // 2 — zigzag  (✦ top-center, rest L/R pairs)
+  [{x:20,y:31},{x:50,y:22},{x:72,y:31},
+   {x:20,y:44},{x:72,y:44},{x:72,y:58},
+   {x:20,y:58},{x:20,y:70},{x:72,y:70}],
+
+  // 3 — sparse 2-col  (≈Σ top / ΨΛ mid / chat center / μ·+· low / ∞✦ bottom)
+  [{x:22,y:36},{x:72,y:78},{x:72,y:36},
+   {x:22,y:22},{x:22,y:66},{x:72,y:22},
+   {x:50,y:52},{x:22,y:78},{x:72,y:66}],
+
+  // 4 — vertical list  (x:50 centered, step 7%)
+  [{x:50,y:22},{x:50,y:29},{x:50,y:36},
+   {x:50,y:43},{x:50,y:50},{x:50,y:57},
+   {x:50,y:64},{x:50,y:71},{x:50,y:78}],
+
+  // 5 — diagonal  (≈ top-left → λ bottom-right)
+  [{x:27,y:36},{x:18,y:29},{x:83,y:78},
+   {x: 8,y:22},{x:36,y:43},{x:55,y:57},
+   {x:46,y:50},{x:65,y:64},{x:74,y:71}],
+
+  // 6 — 3×3  (λ·+·chat / ≈Ψ∞ / ✦Σμ · cols 20/50/80 · rows 25/50/73)
+  [{x:50,y:50},{x:20,y:73},{x:20,y:25},
+   {x:20,y:50},{x:80,y:73},{x:50,y:73},
+   {x:80,y:25},{x:80,y:50},{x:50,y:25}],
+];
+
+// ── Bootstrap ─────────────────────────────────────────────
+const IS_MOBILE = window.innerWidth < 768;
+const LAYOUTS   = IS_MOBILE ? MOBILE_LAYOUTS : DESKTOP_LAYOUTS;
+let kaoIdx = Math.floor(Math.random() * KAOMOJI_SETS.length);
+let KAO    = KAOMOJI_SETS[kaoIdx];
+const stage     = document.getElementById('stage');
+const kaoEl     = document.getElementById('kaomoji');
+
+// Safe zone — item centers stay within these % bounds when arranged
+const SAFE = IS_MOBILE
+  ? { t:22, b:78, l:8,  r:92 }
+  : { t:17, b:82, l:7,  r:93 };
+
+kaoEl.textContent = KAO.sleep;
+
+// ── Font helpers ──────────────────────────────────────────
+function symFs() { return Math.min(40, Math.max(22, window.innerWidth * 0.032)); }
+function lblFs() { return Math.min(16, Math.max(11, window.innerWidth * 0.016)); }
+
+function charWidth(ch, fs) {
+  const c = ch.codePointAt(0);
+  if (c === 0x20 || c === 0xA0) return fs * 0.38;
+  if (c >= 0x1F000) return fs;
+  if (c >= 0x2E80 && c <= 0x9FFF) return fs;
+  if (c >= 0xFF00 && c <= 0xFFEF) return fs;
+  return fs * 0.62;
+}
+
+function charXOffsets(str, fs) {
+  const chars  = [...str];
+  const widths = chars.map(c => charWidth(c, fs));
+  const total  = widths.reduce((a, b) => a + b, 0);
+  const offs   = [];
+  let x = -total / 2;
+  widths.forEach(w => { offs.push(x + w / 2); x += w; });
+  return offs;
+}
+
+// ── Row-spacing helpers ───────────────────────────────────
+// Minimum px between adjacent row centers (based on actual font size)
+// Pattern 4 (vertical list) gets extra padding so each symbol+label pair is clearly grouped
+function minRowGap() {
+  const sf = symFs(), lf = lblFs();
+  const extra = (currentPattern === 4) ? 34 : 0;
+  return sf + sf * 0.32 + lf + 12 + extra;
+}
+
+// Minimum y (px) for the topmost row — always below the header
+function headerClearance() {
+  const h = document.getElementById('header');
+  return (h ? h.getBoundingClientRect().bottom : 0) + 24; // 24px breathing room
+}
+
+// Build a Map<y% → absolute px in stage> with minimum row gap enforced
+// and header clearance applied to the first row.
+function computeYMap(layout) {
+  const H = window.innerHeight;
+  const gap = minRowGap();
+  const uniqueYs = [...new Set(layout.map(p => p.y))].sort((a, b) => a - b);
+  const map = new Map();
+  // First row must clear the header
+  let cursor = Math.max(uniqueYs[0] / 100 * H, headerClearance());
+  uniqueYs.forEach((y, i) => {
+    if (i === 0) { map.set(y, cursor); return; }
+    const natural = (uniqueYs[i] - uniqueYs[i - 1]) / 100 * H;
+    cursor += Math.max(natural, gap);
+    map.set(y, cursor);
+  });
+  return map;
+}
+
+// Total stage height needed for a layout
+function computeStageH(layout) {
+  const H = window.innerHeight;
+  const gap = minRowGap();
+  const uniqueYs = [...new Set(layout.map(p => p.y))].sort((a, b) => a - b);
+  if (uniqueYs.length <= 1) return H;
+  let total = Math.max(uniqueYs[0] / 100 * H, headerClearance());
+  for (let i = 1; i < uniqueYs.length; i++) {
+    const natural = (uniqueYs[i] - uniqueYs[i - 1]) / 100 * H;
+    total += Math.max(natural, gap);
+  }
+  total += (100 - uniqueYs[uniqueYs.length - 1]) / 100 * H;
+  return Math.max(H, total);
+}
+
+// ── Build character spans ─────────────────────────────────
+const allSpans = [];
+
+ITEMS.forEach((item, itemIdx) => {
+  [...item.sym].forEach((ch, charIdx) => {
+    const el = document.createElement('span');
+    el.className = 'char'; el.dataset.t = 's'; el.dataset.item = item.id;
+    el.textContent = ch;
+    stage.appendChild(el);
+    allSpans.push({ el, itemIdx, isSym: true, charIdx });
+  });
+  [...item.lbl].forEach((ch, charIdx) => {
+    const el = document.createElement('span');
+    el.className = 'char'; el.dataset.t = 'l'; el.dataset.item = item.id;
+    el.textContent = ch;
+    stage.appendChild(el);
+    allSpans.push({ el, itemIdx, isSym: false, charIdx });
+  });
+});
+
+// ── Click targets ─────────────────────────────────────────
+const clickTargets = ITEMS.map((item) => {
+  const div = document.createElement('div');
+  div.className = 'ctarget'; div.title = item.lbl;
+  stage.appendChild(div);
+  div.addEventListener('click', e => {
+    e.preventDefault();
+    if (item.isChat) { openChat(); return; }
+    window.location.href = item.href;
+  });
+  div.addEventListener('mouseenter', () =>
+    stage.querySelectorAll(`.char[data-item="${item.id}"]`)
+         .forEach(el => el.classList.add('dim')));
+  div.addEventListener('mouseleave', () =>
+    stage.querySelectorAll(`.char[data-item="${item.id}"]`)
+         .forEach(el => el.classList.remove('dim')));
+  return div;
+});
+
+// ── Drift states (one per span) ───────────────────────────
+const W0 = window.innerWidth, H0 = window.innerHeight;
+const drifts = allSpans.map(() => {
+  const cx = W0 * (.1 + Math.random() * .8);
+  const cy = H0 * (.15 + Math.random() * .7);
+  return {
+    cx, cy,
+    tx: W0 * (.05 + Math.random() * .90),    // initial drift target x
+    ty: H0 * (.05 + Math.random() * .90),    // initial drift target y
+    vx: Math.cos(Math.random() * Math.PI * 2) * 0.000004,  // normalised velocity (0-1 per ms)
+    vy: Math.sin(Math.random() * Math.PI * 2) * 0.000004,
+    topSpeed: 0.000016 + Math.random() * 0.000012,         // max normalised speed (5× slower)
+    exitR: 0,                                               // rotation at scatter time (for blend)
+    ampX:  W0 * (.004 + Math.random() * .006), // small oscillation
+    ampY:  H0 * (.003 + Math.random() * .005),
+    freqX: .000035 + Math.random() * .000040,  // languid frequency
+    freqY: .000028 + Math.random() * .000032,
+    phase: Math.random() * Math.PI * 2,
+    rot:   (Math.random() - .5) * 24,          // visible tilt per character
+    rotF:  .000040 + Math.random() * .000035,
+    rotPh: Math.random() * Math.PI * 2,
+  };
+});
+
+// ── Position helper (left/top based) ─────────────────────
+// Positions element so its CENTER is at (absX, absY) in stage coords.
+function setAbsPos(el, absX, absY, deg, spring) {
+  if (el._spring !== spring) {
+    el.classList.toggle('spring', spring);
+    el._spring = spring;
+  }
+  el._deg            = deg;   // store for smooth rotation exit on scatter
+  el.style.left      = absX + 'px';
+  el.style.top       = absY + 'px';
+  el.style.transform = `translate(-50%,-50%) rotate(${deg}deg)`;
+}
+
+// ── Compute char target position ──────────────────────────
+// Returns { absX, absY, r } in stage coordinates.
+function computeTarget(sp, layout, yMap) {
+  const pos  = layout[sp.itemIdx];
+  const item = ITEMS[sp.itemIdx];
+  const W    = window.innerWidth;
+  const sf   = symFs(), lf = lblFs(), gap = sf * 0.32;
+
+  const cx    = Math.max(SAFE.l, Math.min(SAFE.r, pos.x));
+  const itemX = cx / 100 * W;
+  const itemY = yMap.get(pos.y);
+
+  const isVert = (currentPattern === 6 && !IS_MOBILE);
+  let tx, ty, r = 0;
+
+  if (sp.isSym) {
+    tx = itemX + charXOffsets(item.sym, sf)[sp.charIdx];
+    ty = itemY - (gap / 2 + lf / 2);
+  } else if (isVert) {
+    // Pattern 6: stack label chars vertically, each rotated 90° CW (standard vertical text)
+    tx = itemX;
+    ty = itemY + sf / 2 + gap + sp.charIdx * lf;
+    r  = 90;
+  } else {
+    tx = itemX + charXOffsets(item.lbl, lf)[sp.charIdx];
+    ty = itemY + sf / 2 + gap / 2 + lf / 2;
+  }
+
+  return { absX: tx, absY: ty, r };
+}
+
+// ── State ─────────────────────────────────────────────────
+let arranged       = false;
+let currentPattern = -1;
+let rafId          = null;
+let t0             = null;
+let lastTs         = null;
+
+// ── Drift loop ────────────────────────────────────────────
+// Amplitude ramps from 0 → full over 13.5 s for a slow foggy release.
+// First 2 s: items hover in place (dwell). After 2 s: slowly drift apart.
+function driftLoop(ts) {
+  if (arranged) return;
+  if (t0 === null) { t0 = ts; lastTs = ts; }
+  const t  = ts - t0;
+  const dt = Math.min(ts - lastTs, 50);   // cap at 50 ms
+  lastTs = ts;
+
+  const W    = window.innerWidth, H = window.innerHeight;
+  const ramp = Math.min(1, t / 13500);   // 0 → 1 over 13.5 s (1.5× slower)
+
+  allSpans.forEach((sp, i) => {
+    const d = drifts[i];
+
+    // After 4s dwell: velocity-based spread, speed ramps over 7 more seconds
+    if (t > 4000) {
+      const spreadRamp = Math.min(1, (t - 4000) / 7000);
+
+      // Gentle steering force toward current target
+      const dx = d.tx - d.cx, dy = d.ty - d.cy;
+      const dist = Math.hypot(dx, dy) || 1;
+      d.vx += (dx / dist) * 0.00000008 * spreadRamp * dt;
+      d.vy += (dy / dist) * 0.00000008 * spreadRamp * dt;
+
+      // Speed cap — increases with spreadRamp (starts barely moving, builds up)
+      const spd = Math.hypot(d.vx, d.vy);
+      const maxV = d.topSpeed * spreadRamp;
+      if (spd > maxV && maxV > 0) { d.vx *= maxV / spd; d.vy *= maxV / spd; }
+
+      // Move drift center (velocity normalised × viewport size)
+      d.cx += d.vx * W * dt;
+      d.cy += d.vy * H * dt;
+
+      // Wall bounce — reflect off screen edges
+      if (d.cx < 6)     { d.cx = 6;     if (d.vx < 0) d.vx *= -0.7; }
+      if (d.cx > W - 6) { d.cx = W - 6; if (d.vx > 0) d.vx *= -0.7; }
+      if (d.cy < 6)     { d.cy = 6;     if (d.vy < 0) d.vy *= -0.7; }
+      if (d.cy > H - 6) { d.cy = H - 6; if (d.vy > 0) d.vy *= -0.7; }
+
+      // When near target, pick a new target on one of the four screen edges
+      if (dist < 80) {
+        const edge = Math.floor(Math.random() * 4);
+        if      (edge === 0) { d.tx = W * (.05 + Math.random() * .90); d.ty = 6; }
+        else if (edge === 1) { d.tx = W - 6; d.ty = H * (.05 + Math.random() * .90); }
+        else if (edge === 2) { d.tx = W * (.05 + Math.random() * .90); d.ty = H - 6; }
+        else                 { d.tx = 6; d.ty = H * (.05 + Math.random() * .90); }
+      }
+    }
+
+    // Oscillate around drift center (amplitude scaled by slow ramp)
+    const absX = d.cx + d.ampX * ramp * Math.sin(t * d.freqX + d.phase);
+    const absY = d.cy + d.ampY * ramp * Math.cos(t * d.freqY + d.phase * 1.45);
+
+    // Rotation: blend from arranged rotation (exitR) → drift rotation over 1.5s
+    const rotRamp   = Math.min(1, t / 2500);
+    const exitBlend = Math.max(0, 1 - t / 1500);
+    const r = d.exitR * exitBlend
+            + d.rot * rotRamp * Math.sin(t * d.rotF + d.rotPh) * (1 - exitBlend);
+
+    setAbsPos(sp.el, absX, absY, r, false);
+  });
+
+  rafId = requestAnimationFrame(driftLoop);
+}
+
+// ── Arrange ───────────────────────────────────────────────
+function arrange() {
+  arranged = true;
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+
+  const layout = LAYOUTS[currentPattern];
+  const yMap   = computeYMap(layout);
+  const stageH = computeStageH(layout);
+
+  // When content is taller than viewport: switch to body-scroll mode.
+  // More reliable than overflow-y:scroll on a position:fixed element.
+  stage.style.height = stageH + 'px';
+  if (stageH > window.innerHeight * 1.01) {
+    document.documentElement.style.overflowY = 'scroll';
+    document.body.style.height = stageH + 'px';
+    stage.style.position = 'absolute';
+    window.scrollTo(0, 0);
+  } else {
+    document.documentElement.style.overflowY = '';
+    document.body.style.height = '';
+    stage.style.position = '';
+  }
+
+  // Spring chars to target positions (r=0 normally; r=90 for pattern 6 labels)
+  allSpans.forEach((sp) => {
+    const { absX, absY, r } = computeTarget(sp, layout, yMap);
+    setAbsPos(sp.el, absX, absY, r, true);
+  });
+
+  // Show click targets at item centers
+  ITEMS.forEach((_, i) => {
+    const pos  = layout[i];
+    const cx   = Math.max(SAFE.l, Math.min(SAFE.r, pos.x)) / 100 * window.innerWidth;
+    const cy   = yMap.get(pos.y);
+    setAbsPos(clickTargets[i], cx, cy, 0, false);
+    clickTargets[i].style.display       = 'block';
+    clickTargets[i].style.pointerEvents = 'auto';
+  });
+}
+
+// ── Scatter ───────────────────────────────────────────────
+// Sets drift centers to current arranged positions so items float
+// away from where they were, then spread across the viewport.
+function scatter() {
+  arranged = false;
+  clickTargets.forEach(ct => {
+    ct.style.display = 'none'; ct.style.pointerEvents = 'none';
+  });
+
+  // Restore stage to fixed viewport mode
+  document.documentElement.style.overflowY = '';
+  document.body.style.height = '';
+  stage.style.position = '';
+  stage.style.height = window.innerHeight + 'px';
+  stage.classList.remove('scrollable');
+  window.scrollTo(0, 0);
+
+  const W = window.innerWidth, H = window.innerHeight;
+
+  if (currentPattern >= 0) {
+    const layout = LAYOUTS[currentPattern];
+    const yMap   = computeYMap(layout);
+    allSpans.forEach((sp, i) => {
+      const { absX, absY } = computeTarget(sp, layout, yMap);
+      // Start drift from current arranged position
+      drifts[i].cx    = Math.max(20, Math.min(W - 20, absX));
+      drifts[i].cy    = Math.max(20, Math.min(H - 20, absY));
+      // Save arranged rotation so drift start blends smoothly from it
+      drifts[i].exitR = sp.el._deg || 0;
+      // Initial gentle velocity in a random direction
+      const angle = Math.random() * Math.PI * 2;
+      drifts[i].vx   = Math.cos(angle) * 0.000004;
+      drifts[i].vy   = Math.sin(angle) * 0.000004;
+      // First target on a random screen edge
+      const edge = Math.floor(Math.random() * 4);
+      if      (edge === 0) { drifts[i].tx = W * (.05 + Math.random() * .90); drifts[i].ty = 6; }
+      else if (edge === 1) { drifts[i].tx = W - 6; drifts[i].ty = H * (.05 + Math.random() * .90); }
+      else if (edge === 2) { drifts[i].tx = W * (.05 + Math.random() * .90); drifts[i].ty = H - 6; }
+      else                 { drifts[i].tx = 6; drifts[i].ty = H * (.05 + Math.random() * .90); }
+      // Randomise oscillator phase
+      drifts[i].phase = Math.random() * Math.PI * 2;
+      drifts[i].rotPh = Math.random() * Math.PI * 2;
+    });
+  }
+
+  t0 = null; lastTs = null;
+  rafId = requestAnimationFrame(driftLoop);
+}
+
+// ── Kaomoji ───────────────────────────────────────────────
+let kaoTimer = null, kaoWaking = false;
+
+function wakeKaomoji() {
+  if (kaoWaking) return;
+  kaoWaking = true; kaoEl.textContent = KAO.wake;
+  clearTimeout(kaoTimer);
+  kaoTimer = setTimeout(() => { kaoEl.textContent = KAO.idle; kaoWaking = false; }, 900);
+}
+function sleepKaomoji() {
+  clearTimeout(kaoTimer);
+  // Switch to a new kaomoji set NOW — so the next wake/idle use the same set as this sleep
+  let k;
+  do { k = Math.floor(Math.random() * KAOMOJI_SETS.length); } while (k === kaoIdx);
+  kaoIdx = k;
+  KAO = KAOMOJI_SETS[k];
+  kaoEl.textContent = KAO.sleep;
+  kaoWaking = false;
+}
+
+// ── Interaction ───────────────────────────────────────────
+const IDLE_MS = 2500;
+let idleTimer = null;
+
+function pickNewPattern() {
+  let p;
+  do { p = Math.floor(Math.random() * 7); } while (p === currentPattern);
+  currentPattern = p;
+}
+
+function onInteraction() {
+  if (!arranged) {
+    pickNewPattern();
+    arrange();
+    wakeKaomoji();
+  }
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => { scatter(); sleepKaomoji(); }, IDLE_MS);
+}
+
+document.addEventListener('mousemove',  onInteraction, { passive: true });
+document.addEventListener('touchstart', onInteraction, { passive: true });
+document.addEventListener('keydown',    onInteraction, { passive: true });
+window.addEventListener('scroll',       onInteraction, { passive: true });  // body-scroll mode
+stage.addEventListener('wheel',         onInteraction, { passive: true });
+stage.addEventListener('touchmove',     onInteraction, { passive: true });
+
+// ── Chat overlay ──────────────────────────────────────────
+const chatOverlay  = document.getElementById('chat-overlay');
+const chatStatus   = document.getElementById('chat-status');
+const chatBox      = document.getElementById('chat-box');
+const chatInputRow = document.getElementById('chat-input-row');
+const chatInput    = document.getElementById('chat-input');
+const chatSend     = document.getElementById('chat-send');
+const chatClose    = document.getElementById('chat-close');
+let llmLoaded = false, llmLoading = false;
+const chatHistory = [];
+
+chatClose.addEventListener('click', () => chatOverlay.classList.remove('active'));
+
+function openChat() { chatOverlay.classList.add('active'); if (!llmLoaded && !llmLoading) loadLLM(); }
+
+function appendMsg(role, text) {
+  chatHistory.push({ role, text });
+  const div = document.createElement('div');
+  div.style.cssText = 'margin-bottom:.8em;line-height:1.65;';
+  div.innerHTML = `<span style="opacity:.4;font-size:11px;">${role === 'user' ? 'あなた' : KAO.idle}</span><br>${text}`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function loadLLM() {
+  llmLoading = true;
+  chatStatus.innerHTML = `${KAO.idle}<br>AIを読み込み中…<br><small style="opacity:.45">初回は少し時間がかかります</small>`;
+  try {
+    const s = document.createElement('script'); s.type = 'module';
+    s.textContent = `
+      import * as webllm from 'https://esm.run/@mlc-ai/web-llm';
+      const engine = await webllm.CreateMLCEngine('Llama-3.2-1B-Instruct-q4f32_1-MLC',{
+        initProgressCallback:p=>{const el=document.getElementById('chat-status');if(el)el.textContent=p.text||'読み込み中…';}
+      });
+      window.__llmEngine=engine;
+      document.dispatchEvent(new Event('llm-ready'));
+    `;
+    document.head.appendChild(s);
+    document.addEventListener('llm-ready', () => {
+      llmLoaded = true; llmLoading = false;
+      chatStatus.style.display = 'none';
+      chatBox.style.display = 'block'; chatInputRow.style.display = 'flex';
+      appendMsg('ai', 'やあ！何か話したいことある？');
+      async function doSend() {
+        const msg = chatInput.value.trim(); if (!msg) return;
+        chatInput.value = ''; appendMsg('user', msg);
+        const wait = document.createElement('div');
+        wait.textContent = '…'; wait.style.marginBottom = '.8em';
+        chatBox.appendChild(wait); chatBox.scrollTop = chatBox.scrollHeight;
+        try {
+          const res = await window.__llmEngine.chat.completions.create({
+            messages:[
+              {role:'system',content:'あなたはBuruniverseサイトのアシスタント。短めに親切に。'},
+              ...chatHistory.map(m=>({role:m.role==='user'?'user':'assistant',content:m.text})),
+              {role:'user',content:msg}
+            ], stream: false
+          });
+          chatBox.removeChild(wait); appendMsg('ai', res.choices[0]?.message?.content || '…');
+        } catch { chatBox.removeChild(wait); appendMsg('ai', 'うまく答えられなかった！'); }
+      }
+      chatSend.onclick = doSend;
+      chatInput.onkeydown = e => { if (e.key === 'Enter') doSend(); };
+    }, { once: true });
+  } catch {
+    chatStatus.textContent = 'ロードに失敗しました。リロードしてください。';
+    llmLoading = false;
+  }
+}
+
+// ── Start ─────────────────────────────────────────────────
+// Place each span at its initial drift position immediately (no flash)
+allSpans.forEach((sp, i) => {
+  const d = drifts[i];
+  setAbsPos(sp.el, d.cx, d.cy, d.rot * .2, false);
+});
+
+scatter(); // begins drift loop; currentPattern=-1 so centers stay as initialized
+</script>
+</body>
+</html>
