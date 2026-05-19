@@ -17,11 +17,11 @@
 
     {{ if eq .Section "posts" }}
     <div id="list-branding">
-        <h1 id="list-title">
-            <a href="{{ "posts/" | relURL }}">
-                {{ if eq .Lang "en" }}μ Book Shelf{{ else }}μ 本棚〈ブログ〉{{ end }}
-            </a>
-        </h1>
+        <a href="{{ absURL "/" }}" id="list-logo-link">
+            <img id="list-logo" src="/images/logo_new.PNG" alt="∴ Buruniverse ∵"
+                 onerror="this.style.display='none';document.getElementById('list-logo-text').style.display='block'">
+            <span id="list-logo-text" style="display:none;">∴ Buruniverse ∵</span>
+        </a>
     </div>
     {{ end }}
 
@@ -75,31 +75,35 @@
 
     #list-branding {
         position: absolute;
-        top: 60px;
+        top: 28px;
         left: 0;
         width: 100%;
         text-align: center;
-        pointer-events: none;
-    }
-
-    #list-title {
-        display: inline-block;
-        font-size: 1.5rem;
-        font-weight: 300;
-        letter-spacing: 0.4rem;
-        margin: 0;
-        color: var(--text-color);
+        pointer-events: auto;
         opacity: 0;
-        animation: fogFadeIn 1.5s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+        animation: fogFadeIn 1.2s cubic-bezier(0.2, 0, 0.3, 1) forwards;
     }
-    #list-title a {
+    #list-logo-link {
+        display: inline-block;
         text-decoration: none;
-        color: inherit;
-        pointer-events: auto; /* リンクとしてクリックできるように */
         transition: opacity 0.3s;
     }
-    #list-title a:hover {
-        opacity: 0.7; /* ホバーした時に少し薄くなる演出 */
+    #list-logo-link:hover { opacity: 0.75; }
+    #list-logo {
+        display: block;
+        width: clamp(140px, 22vw, 260px);
+        margin: 0 auto;
+    }
+    #list-logo-text {
+        font-family: "Noto Sans Mono", monospace;
+        font-size: clamp(14px, 2.5vw, 22px);
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        color: var(--text-color);
+    }
+    @media (max-width: 767px) {
+        #list-branding { top: 22px; }
+        #list-logo { width: 52vw; }
     }
 
     /* 3. タイトル自体のデザインとフェードイン演出 */

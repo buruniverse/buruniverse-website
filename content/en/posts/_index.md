@@ -1,3 +1,4 @@
 ---
-title: "μ Book Shelf"
+title: "Blog Shelf"
+url: /blog_shelf/
 ---

@@ -29,7 +29,7 @@ defaultContentLanguage = 'en'        # ★ここを英語(en)に変更！
         identifier = 'blog'
         pre = 'μ'
         name = 'Book Shelf 〈Blog〉'
-        url = '/posts/'  # 英語がメインになったので /en/posts ではなく /posts/ でOKになります
+        url = '/blog_shelf/'  # 英語がメインになったので /en/posts ではなく /posts/ でOKになります
         weight = 3
 
     # [[languages.en.menu.main]]
@@ -71,7 +71,7 @@ defaultContentLanguage = 'en'        # ★ここを英語(en)に変更！
          identifier = 'blog'
          pre = 'μ'
          name = '本棚〈ブログ〉'
-         url = '/posts/' 
+         url = '/blog_shelf/' 
          weight = 3
 
 # disableKinds = ["taxonomy", "term"]
