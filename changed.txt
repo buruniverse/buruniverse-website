@@ -1,1 +1,1 @@
-content/ja/posts/まだ行きます.md
+content/ja/posts/_index.md
