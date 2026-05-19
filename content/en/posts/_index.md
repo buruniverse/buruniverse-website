@@ -1,4 +1,6 @@
 ---
-title: "Blog Shelf"
-url: /blog_shelf/
+title: "bookshelf"
+url: /ja/blog_shelf/
 ---
+
+
