@@ -301,7 +301,7 @@
                 <h1 id="toc-header-title" class="toc-title"></h1>
                 <ul id="toc-list" class="toc-list"></ul>
             </div>
-            {{ range $index, $element := where .Site.RegularPages "Section" "posts" }}
+            {{ range $index, $element := where .Site.RegularPages "Section" "blog_shelf" }}
             <article class="post-entry" id="post-{{ $index }}"
                      data-tags="{{ with .Params.tags }}{{ delimit . "," }}{{ end }}"
                      data-title="{{ .Title }}"
