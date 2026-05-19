@@ -22,10 +22,12 @@
                  onerror="this.style.display='none';document.getElementById('list-logo-text').style.display='block'">
             <span id="list-logo-text" style="display:none;">∴ Buruniverse ∵</span>
         </a>
+        <div id="shelf-page-title">λ Blog Shelf</div>
+        <p id="shelf-page-sub">Read stories by topic</p>
     </div>
     {{ end }}
 
-    {{ if not .IsHome }}
+    {{ if and (not .IsHome) (ne .Section "blog_shelf") }}
     <div id="mini-branding">
         <a href="{{ absURL "/" }}">
             {{ if eq .Lang "en" }}
@@ -101,9 +103,26 @@
         letter-spacing: 0.15em;
         color: var(--text-color);
     }
+    #shelf-page-title {
+        margin-top: 24px;
+        font-family: "Noto Sans Mono", monospace;
+        font-size: clamp(12px, 1.3vw, 17px);
+        font-weight: 400;
+        letter-spacing: 0.3em;
+        color: var(--text-color, #1a1917);
+    }
+    #shelf-page-sub {
+        margin-top: 8px;
+        font-family: "Noto Sans Mono", monospace;
+        font-size: clamp(9px, 0.8vw, 11px);
+        letter-spacing: 0.18em;
+        color: rgba(26,25,23,0.5);
+    }
     @media (max-width: 767px) {
         #list-branding { top: 22px; }
-        #list-logo { width: 52vw; }
+        #list-logo { width: 48vw; }
+        #shelf-page-title { margin-top: 14px; font-size: clamp(12px, 3vw, 16px); }
+        #shelf-page-sub { margin-top: 6px; font-size: clamp(9px, 2.4vw, 12px); }
     }
 
     /* 3. タイトル自体のデザインとフェードイン演出 */

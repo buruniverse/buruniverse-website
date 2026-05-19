@@ -23,13 +23,17 @@
 
         /* ===== SHELF VIEW ===== */
         #shelf-view {
-            position: fixed; top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            position: fixed;
+            /* start below logo + title + subtitle */
+            top: clamp(180px, 22vw, 240px);
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - clamp(180px, 22vw, 240px));
             display: flex;
-            align-items: flex-end;
+            align-items: flex-start;
             justify-content: flex-start;
             gap: 0;
-            padding: 0 8vw 30vh;
+            padding: 30px 8vw 0;
             overflow-x: auto;
             overflow-y: hidden;
             z-index: 10;
@@ -98,15 +102,17 @@
         /* ===== MOBILE SHELF ===== */
         @media (max-width: 767px) {
             #shelf-view {
+                top: 0;
+                height: 100vh;
                 flex-wrap: wrap;
                 overflow-x: hidden;
                 overflow-y: scroll;
                 -webkit-overflow-scrolling: touch;
                 align-items: flex-start;
                 justify-content: flex-start;
-                padding: 22vh 4vw 28vh calc(4vw + 16px);
-                gap: 2px 0;
-                height: 100%;
+                /* padding-top = logo + title + sub + breathing */
+                padding: max(26vh, 160px) calc(4vw + 16px) 20vh 4vw;
+                gap: 0;
             }
 
             .book-item {
@@ -117,9 +123,9 @@
             }
 
             .book-wrap {
-                width: 23vw;
-                min-width: 60px;
-                max-width: 90px;
+                /* 24vw → 4 books per row on all phone sizes */
+                width: 24vw;
+                min-width: 62px;
             }
 
             .book-label {
