@@ -1,1 +1,0 @@
-content/ja/posts/_index.md
