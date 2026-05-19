@@ -56,7 +56,7 @@
         .book-item:hover,
         .book-item.tapped {
             transform: rotate(12deg) translateY(-14px);
-            z-index: 20;
+            z-index: 999 !important;
         }
 
         .book-wrap {
@@ -366,8 +366,14 @@
         }
     });
 
+    // 左の本が手前になるよう z-index を逆順で設定
+    const bookItems = document.querySelectorAll('.book-item');
+    bookItems.forEach((book, i) => {
+        book.style.zIndex = bookItems.length - i;
+    });
+
     // Mobile tap tilt (touch devices)
-    document.querySelectorAll('.book-item').forEach(item => {
+    bookItems.forEach(item => {
         item.addEventListener('touchstart', () => {
             document.querySelectorAll('.book-item.tapped').forEach(b => b.classList.remove('tapped'));
             item.classList.add('tapped');
