@@ -4,18 +4,17 @@
     {{ partial "head.html" . }}
     <style>
         /* ===== BASE ===== */
-        html {
+        html, body {
+            margin: 0; padding: 0;
             background: var(--bg-color, #f7f7f5);
-            overscroll-behavior: none;
-            height: 100%;
-        }
-        body {
-            margin: 0; padding: 0; width: 100%;
-            position: fixed; inset: 0; height: 100%;
-            overflow: hidden;
-            background: var(--bg-color, #f7f7f5);
+            color: var(--text-color, #222);
             overscroll-behavior: none;
         }
+        body.dark-mode {
+            --bg-color: #11233d;
+            --text-color: #fafaf7;
+        }
+        canvas { display: none; } /* hide bg particles */
 
         /* ===== GALLERY CONTAINER ===== */
         #topo-gallery {
@@ -29,11 +28,11 @@
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             z-index: 10;
-            padding: 30px 8vw 80px;
+            padding: 40px 8vw 100px;
             display: flex;
             flex-wrap: wrap;
             align-content: flex-start;
-            gap: 10px 20px;
+            gap: 70px 60px;
         }
         #topo-gallery::-webkit-scrollbar { display: none; }
 
@@ -44,26 +43,26 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             opacity: 0;
             animation: blobFadeIn 1.1s cubic-bezier(0.2, 0, 0.3, 1) forwards;
         }
 
-        /* Staggered vertical offsets for organic look */
+        /* Organic stagger */
         .blob-item:nth-child(3n+1) { margin-top: 0; }
-        .blob-item:nth-child(3n+2) { margin-top: 55px; }
-        .blob-item:nth-child(3n+3) { margin-top: 15px; }
+        .blob-item:nth-child(3n+2) { margin-top: 80px; }
+        .blob-item:nth-child(3n+3) { margin-top: 25px; }
 
         .blob-circle {
-            width: 260px;
-            height: 260px;
+            width: clamp(200px, 26vw, 300px);
+            height: clamp(200px, 26vw, 300px);
             border-radius: 50%;
             overflow: hidden;
             position: relative;
             transition: transform 0.45s cubic-bezier(0.2, 0, 0, 1);
         }
         .blob-item:hover .blob-circle {
-            transform: scale(1.05);
+            transform: scale(1.04);
         }
 
         .blob-frame {
@@ -71,123 +70,119 @@
             height: 100%;
             border: none;
             display: block;
-            pointer-events: none; /* gallery: interactive only in modal */
+            pointer-events: none;
         }
 
-        /* Soft vignette — fades sketch edges to page background */
         .blob-fog {
             position: absolute;
             inset: 0;
             border-radius: 50%;
-            background: radial-gradient(circle, transparent 46%, var(--bg-color) 76%);
+            background: radial-gradient(circle, transparent 48%, var(--bg-color, #f7f7f5) 78%);
             pointer-events: none;
             z-index: 2;
             transition: background 1.2s ease;
         }
+        body.dark-mode .blob-fog {
+            background: radial-gradient(circle, transparent 48%, #11233d 78%);
+        }
 
         .blob-label {
             font-family: "Noto Sans Mono", "SFMono-Regular", monospace;
-            font-size: clamp(9px, 0.7vw, 11px);
-            letter-spacing: 0.18em;
+            font-size: clamp(9px, 0.75vw, 11px);
+            letter-spacing: 0.2em;
             color: var(--text-color);
-            opacity: 0.55;
+            opacity: 0.5;
             text-align: center;
-            max-width: 220px;
+            max-width: 240px;
             transition: opacity 0.3s;
         }
-        .blob-item:hover .blob-label { opacity: 0.9; }
+        .blob-item:hover .blob-label { opacity: 0.85; }
 
         @keyframes blobFadeIn {
-            from { opacity: 0; filter: blur(12px); }
+            from { opacity: 0; filter: blur(14px); }
             to   { opacity: 1; filter: blur(0); }
         }
 
-        /* ===== MODAL ===== */
-        #topo-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        #topo-modal.open { display: flex; }
-
-        #modal-backdrop {
-            position: absolute;
-            inset: 0;
-            background: rgba(10, 10, 20, 0.82);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        #modal-content {
-            position: relative;
-            z-index: 1;
+        /* ===== POPUP — simple rounded card ===== */
+        #topo-popup {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 18px;
+            align-items: stretch;
+            position: fixed;
+            z-index: 500;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.96);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease,
+                        visibility 0s linear 0.25s;
+
+            background: var(--bg-color, #f7f7f5);
+            border-radius: 20px;
+            box-shadow: 0 8px 48px rgba(0,0,0,0.18);
+            overflow: hidden;
+            width: min(72vw, 640px);
+        }
+        #topo-popup.open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+            transition: opacity 0.25s ease, transform 0.25s ease,
+                        visibility 0s linear 0s;
         }
 
-        #modal-close {
-            position: absolute;
-            top: -38px;
-            right: 0;
+        #popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px 10px;
+        }
+        #popup-title {
+            font-family: "Noto Sans Mono", monospace;
+            font-size: clamp(11px, 1vw, 14px);
+            letter-spacing: 0.25em;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin: 0;
+        }
+        #popup-close {
             background: none;
             border: none;
-            color: rgba(255,255,255,0.6);
             font-family: "Noto Sans Mono", monospace;
-            font-size: 0.85rem;
-            letter-spacing: 0.2em;
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            color: var(--text-color);
+            opacity: 0.45;
             cursor: pointer;
-            padding: 4px 0;
-            transition: color 0.2s;
+            padding: 2px 0;
+            transition: opacity 0.2s;
         }
-        #modal-close:hover { color: rgba(255,255,255,0.95); }
+        #popup-close:hover { opacity: 0.9; }
 
-        #modal-frame-wrap {
-            width: min(80vmin, 680px);
-            height: min(80vmin, 680px);
-            border-radius: 50%;
-            overflow: hidden;
+        #popup-frame-wrap {
             position: relative;
+            width: 100%;
+            /* 1:1 aspect ratio */
+            aspect-ratio: 1 / 1;
         }
-
-        #modal-frame {
+        #popup-frame {
             width: 100%;
             height: 100%;
             border: none;
             display: block;
         }
 
-        #modal-fog {
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background: radial-gradient(circle, transparent 55%, rgba(10,10,20,0.7) 88%);
-            pointer-events: none;
-        }
-
-        #modal-info {
-            text-align: center;
-            color: rgba(250,250,247,0.88);
-            max-width: 520px;
-            padding: 0 16px;
-        }
-        #modal-title {
-            font-family: "Noto Sans Mono", monospace;
-            font-size: clamp(12px, 1.1vw, 15px);
-            font-weight: 400;
-            letter-spacing: 0.3em;
-            margin: 0 0 10px;
-        }
-        #modal-desc {
+        #popup-desc {
+            padding: 12px 20px 16px;
             font-family: "Zen Kaku Gothic New", sans-serif;
-            font-size: clamp(11px, 0.85vw, 13px);
-            letter-spacing: 0.06em;
-            line-height: 1.7;
-            opacity: 0.68;
+            font-size: clamp(10px, 0.8vw, 12px);
+            letter-spacing: 0.07em;
+            line-height: 1.65;
+            color: var(--text-color);
+            opacity: 0.55;
             margin: 0;
         }
 
@@ -196,8 +191,8 @@
             #topo-gallery {
                 top: 0;
                 height: 100vh;
-                padding: max(26vh, 160px) 3vw 20vh;
-                gap: 6px 0;
+                padding: max(26vh, 160px) 4vw 20vh;
+                gap: 30px 0;
                 justify-content: space-evenly;
                 align-content: flex-start;
             }
@@ -211,17 +206,15 @@
                 min-width: 120px;
                 min-height: 120px;
             }
-            /* Reset stagger on mobile — just even-row offset */
             .blob-item:nth-child(3n+1),
             .blob-item:nth-child(3n+2),
             .blob-item:nth-child(3n+3) { margin-top: 0; }
-            .blob-item:nth-child(even) { margin-top: 28px; }
+            .blob-item:nth-child(even) { margin-top: 32px; }
+            .blob-label { font-size: clamp(8px, 2.2vw, 10px); }
 
-            .blob-label { font-size: clamp(8px, 2vw, 10px); }
-
-            #modal-frame-wrap {
-                width: 86vw;
-                height: 86vw;
+            #topo-popup {
+                width: 92vw;
+                top: 50%;
             }
         }
     </style>
@@ -233,13 +226,13 @@
     <div id="topo-gallery">
         {{ range $i, $page := .Pages }}
         <div class="blob-item"
-             style="animation-delay: {{ mul (float $i) 0.07 }}s"
-             data-src="/topology/{{ $page.Params.sketch }}/"
+             style="animation-delay: {{ mul (float $i) 0.08 }}s"
+             data-src="/sketches/{{ $page.Params.sketch }}/"
              data-title="{{ $page.Title }}"
              data-desc="{{ $page.Params.description }}">
             <div class="blob-circle">
                 <iframe class="blob-frame"
-                        src="/topology/{{ $page.Params.sketch }}/"
+                        src="/sketches/{{ $page.Params.sketch }}/"
                         loading="lazy"
                         scrolling="no"
                         title="{{ $page.Title }}"></iframe>
@@ -250,68 +243,59 @@
         {{ end }}
     </div>
 
-    <!-- Modal -->
-    <div id="topo-modal">
-        <div id="modal-backdrop"></div>
-        <div id="modal-content">
-            <button id="modal-close">[ close ]</button>
-            <div id="modal-frame-wrap">
-                <iframe id="modal-frame" src="" scrolling="no" title=""></iframe>
-                <div id="modal-fog"></div>
-            </div>
-            <div id="modal-info">
-                <h2 id="modal-title"></h2>
-                <p id="modal-desc"></p>
-            </div>
+    <!-- Popup card -->
+    <div id="topo-popup">
+        <div id="popup-header">
+            <h2 id="popup-title"></h2>
+            <button id="popup-close">[ close ]</button>
         </div>
+        <div id="popup-frame-wrap">
+            <iframe id="popup-frame" src="" scrolling="no" title=""></iframe>
+        </div>
+        <p id="popup-desc"></p>
     </div>
 
     <script>
     (function() {
         var items    = document.querySelectorAll('.blob-item');
-        var modal    = document.getElementById('topo-modal');
-        var mFrame   = document.getElementById('modal-frame');
-        var mTitle   = document.getElementById('modal-title');
-        var mDesc    = document.getElementById('modal-desc');
-        var backdrop = document.getElementById('modal-backdrop');
-        var closeBtn = document.getElementById('modal-close');
+        var popup    = document.getElementById('topo-popup');
+        var pFrame   = document.getElementById('popup-frame');
+        var pTitle   = document.getElementById('popup-title');
+        var pDesc    = document.getElementById('popup-desc');
+        var closeBtn = document.getElementById('popup-close');
 
-        function openModal(src, title, desc) {
-            mFrame.src   = src;
-            mTitle.textContent = title;
-            mDesc.textContent  = desc;
-            modal.classList.add('open');
-            document.body.style.overflow = 'hidden';
+        function openPopup(src, title, desc) {
+            pFrame.src = src;
+            pTitle.textContent = title;
+            pDesc.textContent  = desc;
+            popup.classList.add('open');
         }
-        function closeModal() {
-            modal.classList.remove('open');
-            setTimeout(function(){ mFrame.src = ''; }, 300);
-            document.body.style.overflow = '';
+        function closePopup() {
+            popup.classList.remove('open');
+            setTimeout(function(){ pFrame.src = ''; }, 300);
         }
 
         items.forEach(function(item) {
             item.addEventListener('click', function() {
-                openModal(item.dataset.src, item.dataset.title, item.dataset.desc);
+                openPopup(item.dataset.src, item.dataset.title, item.dataset.desc);
             });
         });
-
-        backdrop.addEventListener('click', closeModal);
-        closeBtn.addEventListener('click', closeModal);
+        closeBtn.addEventListener('click', closePopup);
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
+            if (e.key === 'Escape') closePopup();
         });
 
-        // Touch: tap same item twice to open modal on mobile
+        // Mobile: tap once to preview, tap again to open popup
         var lastTapped = null;
         items.forEach(function(item) {
             item.addEventListener('touchend', function(e) {
                 if (lastTapped === item) {
                     e.preventDefault();
-                    openModal(item.dataset.src, item.dataset.title, item.dataset.desc);
+                    openPopup(item.dataset.src, item.dataset.title, item.dataset.desc);
                     lastTapped = null;
                 } else {
                     lastTapped = item;
-                    setTimeout(function() { lastTapped = null; }, 600);
+                    setTimeout(function() { lastTapped = null; }, 700);
                 }
             }, { passive: false });
         });
