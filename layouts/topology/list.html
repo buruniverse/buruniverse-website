@@ -4,11 +4,19 @@
     {{ partial "head.html" . }}
     <style>
         /* ===== BASE ===== */
-        html, body {
+        html {
+            height: 100%;
+            background: var(--bg-color, #f7f7f5);
+        }
+        body {
             margin: 0; padding: 0;
+            position: fixed; inset: 0;      /* fills full viewport = dark mode works */
+            height: 100%;
+            overflow: hidden;
             background: var(--bg-color, #f7f7f5);
             color: var(--text-color, #222);
             overscroll-behavior: none;
+            transition: background-color 1.2s ease, color 1.2s ease;
         }
         body.dark-mode {
             --bg-color: #11233d;
@@ -36,12 +44,13 @@
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             z-index: 10;
-            padding: 40px 8vw 120px;
+            padding: 40px 5vw 120px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            column-gap: 40px;
+            column-gap: 30px;
             row-gap: 0; /* rows handled by per-item margin */
             align-items: start;
+            justify-items: center;
         }
         #topo-gallery::-webkit-scrollbar { display: none; }
 
@@ -61,10 +70,10 @@
         .blob-item:nth-child(3n+2) { margin-top: 90px; padding-bottom: 80px; }
         .blob-item:nth-child(3n+3) { margin-top: 28px; padding-bottom: 80px; }
 
-        /* Circle fills each grid cell proportionally */
+        /* Circle: 1.5× larger, fits within 3-column grid */
         .blob-circle {
-            width: clamp(180px, 22vw, 320px);
-            height: clamp(180px, 22vw, 320px);
+            width: clamp(240px, 28vw, 400px);
+            height: clamp(240px, 28vw, 400px);
             border-radius: 50%;
             overflow: hidden;
             position: relative;
