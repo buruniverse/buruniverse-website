@@ -204,13 +204,13 @@
 
 <script>
 // ── ダークモード（サイト共通 localStorage と連携） ──────────────
+// ※ script は <body> 末尾にあるので DOM は既に準備済み、DOMContentLoaded 不要
 (function () {
   var dark = localStorage.getItem('theme') === 'dark';
   if (dark) document.body.classList.add('dark-mode');
 
-  document.addEventListener('DOMContentLoaded', function () {
-    var btn = document.getElementById('home-theme-btn');
-    if (!btn) return;
+  var btn = document.getElementById('home-theme-btn');
+  if (btn) {
     btn.textContent = dark ? '☀︎' : '☽';
     btn.onclick = function () {
       dark = !dark;
@@ -218,7 +218,7 @@
       localStorage.setItem('theme', dark ? 'dark' : 'light');
       btn.textContent = dark ? '☀︎' : '☽';
     };
-  });
+  }
 })();
 
 'use strict';
