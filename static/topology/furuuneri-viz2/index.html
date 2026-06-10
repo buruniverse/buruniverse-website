@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふるうねり</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f0ece6; overflow: hidden; cursor: none; }
+  canvas { display: block; }
+  #ui {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    opacity: 0.35;
+    transition: opacity 0.4s;
+    font-family: 'Georgia', serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: #3a3a3a;
+  }
+  #ui:hover { opacity: 0.9; }
+  #ui button {
+    background: none;
+    border: 1px solid #3a3a3a55;
+    color: #3a3a3a;
+    padding: 5px 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    transition: all 0.3s;
+    border-radius: 1px;
+  }
+  #ui button:hover { background: #3a3a3a11; cursor: pointer; }
+  #ui button.active { background: #3a3a3a22; border-color: #3a3a3a99; }
+  #label {
+    position: fixed; top: 24px; left: 28px;
+    font-family: 'Georgia', serif; font-size: 10px;
+    letter-spacing: 0.2em; color: #3a3a3a; opacity: 0.2;
+    pointer-events: none;
+  }
+  #hint {
+    position: fixed; top: 24px; right: 28px;
+    font-family: 'Georgia', serif; font-size: 9px;
+    letter-spacing: 0.15em; color: #3a3a3a; opacity: 0.15;
+    text-align: right; line-height: 1.9; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div id="label">ふるうねり · structural invariants</div>
+<div id="hint">hover · attract<br>click · repel</div>
+<canvas id="c"></canvas>
+<div id="ui">
+  <button id="btnBuru" class="active">buru</button>
+  <button id="btnBuddha">buddha</button>
+  <button id="btnTesla">tesla</button>
+  <button id="btnGPT">GPT-persona</button>
+  <span style="margin:0 4px;opacity:0.4">·</span>
+  <button id="btnReset">reset</button>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+// ── MODES ─────────────────────────────────────────────────────────────────
+const MODES = {
+  buru: {
+    coreOffset:[[-0.08,-0.06],[0.07,0.09]], coreSpread:0.18, coreDrift:0.00018,
+    particleCount:520, preParticleCount:180,
+    trailAlpha:0.025, attractStrength:0.00012, repulseRadius:60,
+    spiralBias:0.38, noiseScale:0.0009, noiseStrength:0.55,
+    colorPalette:[[42,55,72],[80,100,115],[25,35,50],[120,138,148,0.3]],
+    fogColor:'rgba(100,135,158,0.018)', lineThreshold:90, lineAlpha:0.06,
+  },
+  buddha: {
+    coreOffset:[[0.06,0.04]], coreSpread:0.04, coreDrift:0.00004,
+    particleCount:400, preParticleCount:60,
+    trailAlpha:0.01, attractStrength:0.00028, repulseRadius:20,
+    spiralBias:-0.15, noiseScale:0.0004, noiseStrength:0.18,
+    colorPalette:[[15,15,20],[40,38,42],[8,8,12],[70,65,75,0.2]],
+    fogColor:'rgba(30,25,35,0.012)', lineThreshold:50, lineAlpha:0.04,
+  },
+  tesla: {
+    coreOffset:[[-0.12,-0.08],[0.13,0.05],[0.0,-0.14]], coreSpread:0.22, coreDrift:0.00042,
+    particleCount:600, preParticleCount:220,
+    trailAlpha:0.055, attractStrength:0.00022, repulseRadius:45,
+    spiralBias:0.72, noiseScale:0.0018, noiseStrength:1.1,
+    colorPalette:[[55,65,30],[90,105,50],[140,155,80],[200,210,130,0.25]],
+    fogColor:'rgba(100,115,50,0.014)', lineThreshold:110, lineAlpha:0.09,
+  },
+  GPT: {
+    coreOffset:[[-0.10,0.02],[0.10,-0.02]], coreSpread:0.20, coreDrift:0.00025,
+    particleCount:480, preParticleCount:160,
+    trailAlpha:0.030, attractStrength:0.00016, repulseRadius:55,
+    spiralBias:0.50, noiseScale:0.0012, noiseStrength:0.72,
+    colorPalette:[[35,60,75],[65,90,105],[20,45,60],[100,140,155,0.3]],
+    fogColor:'rgba(70,110,130,0.016)', lineThreshold:95, lineAlpha:0.07,
+  },
+};
+let currentMode = 'buru', M = MODES[currentMode];
+
+// ── NOISE ─────────────────────────────────────────────────────────────────
+function hash(n){let x=Math.sin(n)*43758.5453123;return x-Math.floor(x);}
+function noise2(x,y){
+  const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy;
+  const ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy);
+  const a=hash(ix+iy*57),b=hash(ix+1+iy*57),c=hash(ix+(iy+1)*57),d=hash(ix+1+(iy+1)*57);
+  return a+(b-a)*ux+(c-a)*uy+(d-a+a-b-c+b+c-d)*ux*uy;
+}
+function curl(x,y,scale,t){
+  const eps=0.01;
+  const n1=noise2(x*scale+t,y*scale),n2=noise2(x*scale,y*scale+t);
+  return{dx:(noise2(x*scale,y*scale+eps+t)-n2)/eps,dy:-(noise2(x*scale+eps,y*scale+t)-n1)/eps};
+}
+
+// ── POINTER ───────────────────────────────────────────────────────────────
+let mouse = {x:-999, y:-999, active:false};
+let bursts = [];
+
+canvas.addEventListener('mousemove', e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.active=true;});
+canvas.addEventListener('mouseleave',()=>{mouse.active=false;});
+canvas.addEventListener('mousedown', e=>{
+  if(e.target===canvas) bursts.push({x:e.clientX,y:e.clientY,age:0,maxAge:42});
+});
+// touch support
+canvas.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;mouse.active=true;
+},{passive:false});
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  const t=e.touches[0];
+  mouse.x=t.clientX;mouse.y=t.clientY;mouse.active=true;
+  bursts.push({x:t.clientX,y:t.clientY,age:0,maxAge:42});
+},{passive:false});
+canvas.addEventListener('touchend',()=>{mouse.active=false;});
+
+function drawCursor(){
+  if(!mouse.active)return;
+  ctx.save();
+  ctx.beginPath();ctx.arc(mouse.x,mouse.y,8,0,Math.PI*2);
+  ctx.strokeStyle='rgba(50,55,65,0.3)';ctx.lineWidth=0.7;ctx.stroke();
+  ctx.beginPath();ctx.arc(mouse.x,mouse.y,1.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(50,55,65,0.45)';ctx.fill();
+  ctx.restore();
+}
+
+// ── CORE ──────────────────────────────────────────────────────────────────
+class Core{
+  constructor(ox,oy){this.ox=ox;this.oy=oy;this.phase=Math.random()*Math.PI*2;this.x=W*.5+W*ox;this.y=H*.5+H*oy;}
+  update(t){this.x=W*.5+W*this.ox+Math.sin(t*M.coreDrift*1.3+this.phase)*W*.07;this.y=H*.5+H*this.oy+Math.cos(t*M.coreDrift*.9+this.phase*1.4)*H*.05;}
+}
+
+// ── PARTICLE ──────────────────────────────────────────────────────────────
+class Particle{
+  constructor(pre=false){this.pre=pre;this.reset();}
+  reset(){
+    const ci=Math.floor(Math.random()*cores.length);
+    const c=cores[ci]||{x:W*.5,y:H*.5};
+    const a=Math.random()*Math.PI*2,r=Math.random()*W*M.coreSpread;
+    this.x=c.x+Math.cos(a)*r;this.y=c.y+Math.sin(a)*r;
+    this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;
+    this.life=.3+Math.random()*.7;this.age=0;
+    this.speed=.6+Math.random()*1.4;
+    this.colorIdx=Math.floor(Math.random()*M.colorPalette.length);
+    this.size=this.pre?.5+Math.random()*1.2:.8+Math.random()*2.2;
+  }
+  update(t,dt){
+    this.age+=dt*.0003;
+    const cn=curl(this.x,this.y,M.noiseScale,t*.0001);
+    this.vx+=cn.dx*M.noiseStrength*dt*.01;
+    this.vy+=cn.dy*M.noiseStrength*dt*.01;
+
+    for(const c of cores){
+      const dx=c.x-this.x,dy=c.y-this.y;
+      const dist=Math.sqrt(dx*dx+dy*dy)+.001;
+      if(dist<M.repulseRadius){this.vx-=dx/dist*.15;this.vy-=dy/dist*.15;}
+      else{
+        const f=M.attractStrength*dt/(dist*.01+1);
+        this.vx+=dx*f;this.vy+=dy*f;
+        this.vx+=-dy/dist*M.spiralBias*f*8;this.vy+=dx/dist*M.spiralBias*f*8;
+      }
+    }
+
+    // hover attract
+    if(mouse.active){
+      const dx=mouse.x-this.x,dy=mouse.y-this.y;
+      const d=Math.sqrt(dx*dx+dy*dy)+1;
+      const R=170;
+      if(d<R){const s=(1-d/R)*(1-d/R);this.vx+=(dx/d)*s*.6;this.vy+=(dy/d)*s*.6;}
+    }
+
+    // burst repel wave
+    for(const b of bursts){
+      const dx=this.x-b.x,dy=this.y-b.y;
+      const d=Math.sqrt(dx*dx+dy*dy)+1;
+      const prog=b.age/b.maxAge;
+      const wave=240*prog;
+      const diff=Math.abs(d-wave);
+      if(diff<60){
+        const power=(1-diff/60)*(1-prog)*6;
+        this.vx+=(dx/d)*power;this.vy+=(dy/d)*power;
+      }
+    }
+
+    this.vx*=.97;this.vy*=.97;
+    this.x+=this.vx*this.speed;this.y+=this.vy*this.speed;
+    const m=80;
+    if(this.x<-m)this.x=W+m;if(this.x>W+m)this.x=-m;
+    if(this.y<-m)this.y=H+m;if(this.y>H+m)this.y=-m;
+    if(this.age>this.life)this.reset();
+  }
+  draw(){
+    const fade=this.age<.1?this.age/.1:this.age>this.life-.15?(this.life-this.age)/.15:1;
+    const[r,g,b,a=1]=M.colorPalette[this.colorIdx];
+    ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${r},${g},${b},${fade*(this.pre?.18:.65)*a})`;ctx.fill();
+  }
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let cores=[],particles=[],preParticles=[];
+let t=0,lastTime=null,transitioning=false,transitionAlpha=0,targetMode=null;
+
+function buildScene(){
+  M=MODES[currentMode];
+  cores=M.coreOffset.map(([ox,oy])=>new Core(ox,oy));
+  particles=Array.from({length:M.particleCount},()=>new Particle(false));
+  preParticles=Array.from({length:M.preParticleCount},()=>new Particle(true));
+  for(let i=0;i<400;i++){
+    cores.forEach(c=>c.update(i*16));
+    particles.forEach(p=>p.update(i*16,16));
+    preParticles.forEach(p=>p.update(i*16,16));
+  }
+}
+
+function drawFog(){
+  for(const c of cores){
+    const r=W*M.coreSpread*1.6;
+    const g=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,r);
+    g.addColorStop(0,M.fogColor);g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(c.x,c.y,r,0,Math.PI*2);ctx.fill();
+  }
+}
+
+function drawLines(){
+  const all=particles,step=6;
+  for(let i=0;i<all.length;i+=step){
+    for(let j=i+step;j<all.length;j+=step){
+      const dx=all[i].x-all[j].x,dy=all[i].y-all[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<M.lineThreshold){
+        const[r,g,b]=M.colorPalette[0];
+        ctx.beginPath();ctx.moveTo(all[i].x,all[i].y);ctx.lineTo(all[j].x,all[j].y);
+        ctx.strokeStyle=`rgba(${r},${g},${b},${M.lineAlpha*(1-d/M.lineThreshold)})`;
+        ctx.lineWidth=.4;ctx.stroke();
+      }
+    }
+  }
+}
+
+function drawBursts(){
+  for(const b of bursts){
+    const prog=b.age/b.maxAge;
+    ctx.beginPath();ctx.arc(b.x,b.y,240*prog,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(50,55,65,${(1-prog)*.15})`;
+    ctx.lineWidth=1.2*(1-prog);ctx.stroke();
+  }
+}
+
+function loop(ts){
+  requestAnimationFrame(loop);
+  if(!lastTime)lastTime=ts;
+  const dt=Math.min(ts-lastTime,32);lastTime=ts;t+=dt;
+  bursts=bursts.filter(b=>b.age<b.maxAge);bursts.forEach(b=>b.age++);
+
+  ctx.fillStyle=`rgba(240,236,230,${M.trailAlpha})`;ctx.fillRect(0,0,W,H);
+  cores.forEach(c=>c.update(t));
+  drawFog();drawLines();
+  preParticles.forEach(p=>{p.update(t,dt);p.draw();});
+  particles.forEach(p=>{p.update(t,dt);p.draw();});
+  drawBursts();drawCursor();
+
+  if(transitioning){
+    transitionAlpha+=.04;
+    ctx.fillStyle=`rgba(240,236,230,${Math.min(transitionAlpha,1)})`;ctx.fillRect(0,0,W,H);
+    if(transitionAlpha>=1){currentMode=targetMode;buildScene();transitioning=false;transitionAlpha=0;}
+  }
+}
+
+buildScene();
+ctx.fillStyle='#f0ece6';ctx.fillRect(0,0,W,H);
+requestAnimationFrame(loop);
+
+// ── UI ────────────────────────────────────────────────────────────────────
+function switchMode(mode){
+  if(mode===currentMode||transitioning)return;
+  targetMode=mode;transitioning=true;transitionAlpha=0;
+  document.querySelectorAll('#ui button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn'+mode.charAt(0).toUpperCase()+mode.slice(1))?.classList.add('active');
+}
+document.getElementById('btnBuru').onclick=()=>switchMode('buru');
+document.getElementById('btnBuddha').onclick=()=>switchMode('buddha');
+document.getElementById('btnTesla').onclick=()=>switchMode('tesla');
+document.getElementById('btnGPT').onclick=()=>switchMode('GPT');
+document.getElementById('btnReset').onclick=()=>{ctx.fillStyle='#f0ece6';ctx.fillRect(0,0,W,H);buildScene();};
+</script>
+</body>
+</html>

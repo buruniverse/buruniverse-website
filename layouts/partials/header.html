@@ -27,7 +27,19 @@
     </div>
     {{ end }}
 
-    {{ if and (not .IsHome) (ne .Section "blog_shelf") }}
+    {{ if eq .Section "topology" }}
+    <div id="list-branding">
+        <a href="{{ absURL "/" }}" id="list-logo-link">
+            <img id="list-logo" src="/images/logo_new.PNG" alt="∴ Buruniverse ∵"
+                 onerror="this.style.display='none';document.getElementById('list-logo-text').style.display='block'">
+            <span id="list-logo-text" style="display:none;">∴ Buruniverse ∵</span>
+        </a>
+        <div id="shelf-page-title">∂ Topology</div>
+        <p id="shelf-page-sub">{{ if eq .Lang "en" }}Interactive visual experiments{{ else }}インタラクティブな視覚実験{{ end }}</p>
+    </div>
+    {{ end }}
+
+    {{ if and (not .IsHome) (ne .Section "blog_shelf") (ne .Section "topology") }}
     <div id="mini-branding">
         <a href="{{ absURL "/" }}">
             {{ if eq .Lang "en" }}

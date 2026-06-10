@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Consciousness Geology - v2.9 Final</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background: #f5f5f0; font-family: sans-serif; }
+        #ui-layer { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 600px; z-index: 100; }
+        #input-box { width: 100%; padding: 15px 25px; border-radius: 30px; border: none; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); font-size: 16px; outline: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box; }
+        #status { position: absolute; top: 20px; left: 20px; font-size: 11px; color: #aaa; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="status">System Ready...</div>
+    <div id="ui-layer"><input type="text" id="input-box" placeholder="今の意識を言葉にしてください（Enter）"></div>
+    <script>
+    // --- 意識パラメータ（初期値） ---
+    let data = { turbulence: 0.3, inertia: 0.5, crystallization: 0.2, permeability: 0.8, phase_transition: 0.1 };
+    let particles = [];
+    let t = 0;
+
+    // --- p5.js: 初期化 ---
+    function setup() {
+        createCanvas(windowWidth, windowHeight);
+        for (let i = 0; i < 200; i++) particles.push(new Particle());
+    }
+
+    // --- p5.js: 毎フレーム描画 ---
+    function draw() {
+        let alpha = map(data.permeability, 0, 1, 40, 5);
+        background(245, 245, 240, alpha);
+        if (random() < data.phase_transition * 0.02) background(255, 255, 255, 100);
+        t += 0.005;
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].show();
+            if (random() > data.phase_transition) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let d = dist(particles[i].pos.x, particles[i].pos.y, particles[j].pos.x, particles[j].pos.y);
+                    if (d < data.crystallization * 80) drawOrganicLink(particles[i].pos, particles[j].pos, d, 3);
+                }
+            }
+        }
+    }
+
+    function drawOrganicLink(p1, p2, d, level) {
+        if (level <= 0) return;
+        let mid = p5.Vector.lerp(p1, p2, 0.5);
+        mid.add(p5.Vector.random2D().mult(d * 0.2 * data.turbulence));
+        stroke(map(data.permeability, 0, 1, 30, 80), 50);
+        strokeWeight(level * 0.5);
+        line(p1.x, p1.y, mid.x, mid.y);
+        line(p2.x, p2.y, mid.x, mid.y);
+        if (data.crystallization > 0.6) drawOrganicLink(p1, mid, d * 0.5, level - 1);
+    }
+
+    class Particle {
+        constructor() {
+            this.pos = createVector(random(width), random(height));
+            this.vel = createVector(0, 0);
+        }
+        update() {
+            let n = noise(this.pos.x * 0.005, this.pos.y * 0.005, t);
+            let flow = p5.Vector.fromAngle(n * TWO_PI * 2).mult(data.inertia);
+            this.vel.add(flow).add(p5.Vector.random2D().mult(data.turbulence * 0.5));
+            this.vel.limit(2);
+            this.pos.add(this.vel);
+            if (this.pos.x > width)  this.pos.x = 0;
+            if (this.pos.x < 0)      this.pos.x = width;
+            if (this.pos.y > height) this.pos.y = 0;
+            if (this.pos.y < 0)      this.pos.y = height;
+        }
+        show() {
+            noStroke();
+            fill(50 + data.turbulence * 100, 60 + data.inertia * 20, 70 + data.crystallization * 30, 180);
+            ellipse(this.pos.x, this.pos.y, 2);
+        }
+    }
+
+    // --- ローカルテキスト解析エンジン（APIキー不要） ---
+    function analyzeText(text) {
+        const sentences = text.split(/[。．！？!?.]+/).filter(s => s.trim().length > 0);
+        const words = text.split(/[\s、,，]+/).filter(w => w.trim().length > 0);
+        const chars = text.length;
+
+        // turbulence: 句読点・感嘆符の密度 + 文長のばらつき
+        const punctCount = (text.match(/[！？!?…]/g) || []).length;
+        const sentLengths = sentences.map(s => s.length);
+        const avgLen = sentLengths.reduce((a, b) => a + b, 0) / (sentLengths.length || 1);
+        const variance = sentLengths.reduce((a, b) => a + Math.pow(b - avgLen, 2), 0) / (sentLengths.length || 1);
+        const turbulence = Math.min(1, (punctCount / (chars || 1)) * 8 + Math.sqrt(variance) / 30);
+
+        // inertia: 単語の繰り返し率（単調さ）
+        const wordFreq = {};
+        words.forEach(w => { wordFreq[w] = (wordFreq[w] || 0) + 1; });
+        const repeated = Object.values(wordFreq).filter(v => v > 1).length;
+        const inertia = Math.min(1, repeated / (words.length || 1) * 2);
+
+        // crystallization: 断定的な表現の密度
+        const concretePat = /[はがをにでもの]|です|ます|だ。|である/g;
+        const crystalMatches = (text.match(concretePat) || []).length;
+        const crystallization = Math.min(1, crystalMatches / (chars || 1) * 5);
+
+        // permeability: 開放的・曖昧な表現
+        const openPat = /かも|かな|？|\?|でしょう|思う|感じ|たぶん|もしか|かもしれ/g;
+        const openMatches = (text.match(openPat) || []).length;
+        const permeability = Math.min(1, openMatches / (sentences.length || 1) * 0.8 + 0.2);
+
+        // phase_transition: 逆接・転換語の存在
+        const shiftPat = /でも|しかし|だけど|けど|ところが|一方|むしろ|というか|いや|やっぱり/g;
+        const shiftMatches = (text.match(shiftPat) || []).length;
+        const phase_transition = Math.min(1, shiftMatches / (sentences.length || 1) * 0.9);
+
+        return {
+            turbulence:       Math.max(0.05, turbulence),
+            inertia:          Math.max(0.05, inertia),
+            crystallization:  Math.max(0.05, crystallization),
+            permeability:     Math.max(0.05, permeability),
+            phase_transition: Math.max(0.02, phase_transition)
+        };
+    }
+
+    // --- UI ---
+    const inputBox  = document.getElementById('input-box');
+    const statusBox = document.getElementById('status');
+
+    inputBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const text = inputBox.value.trim();
+            if (!text) return;
+            inputBox.value = "";
+            const result = analyzeText(text);
+            data = result;
+            statusBox.innerText = "解析完了 · T:" + result.turbulence.toFixed(2)
+                + " I:" + result.inertia.toFixed(2)
+                + " C:" + result.crystallization.toFixed(2)
+                + " P:" + result.permeability.toFixed(2)
+                + " Φ:" + result.phase_transition.toFixed(2);
+        }
+    });
+
+    window.onresize = () => resizeCanvas(windowWidth, windowHeight);
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Consciousness Geology - Realtime Mirror</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background: #f5f5f0; font-family: sans-serif; }
+        #ui-layer {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 600px; z-index: 100;
+        }
+        #input-box {
+            width: 100%; padding: 15px; border-radius: 25px; border: 1px solid #ccc;
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px);
+            font-size: 16px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        #status {
+            position: absolute; top: 20px; left: 20px; font-size: 12px; color: #888;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="status">システム待機中...</div>
+
+    <div id="ui-layer">
+        <input type="text" id="input-box" placeholder="今の意識を言葉にしてください（Enterで解析）">
+    </div>
+
+    <script>
+    // --- 設定 ---
+    const API_KEY = 'AIzaSyDEb4-swBys_qcid73R0xO8Ao5LPm4osHs'; 
+    const MODEL_NAME = "gemini-1.5-flash";
+
+    let data = {
+      "turbulence": 0.3, "inertia": 0.5, "crystallization": 0.2, "permeability": 0.8, "phase_transition": 0.1
+    };
+
+    let particles = [];
+    let t = 0;
+
+    // --- p5.js Logic ---
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      for (let i = 0; i < 200; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function draw() {
+      let alpha = map(data.permeability, 0, 1, 40, 5); 
+      background(245, 245, 240, alpha); 
+
+      if (random() < data.phase_transition * 0.02) {
+        background(255, 255, 255, 100); // 修正：100に設定
+      }
+
+      t += 0.005;
+
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].show();
+        
+        if (random() > data.phase_transition) {
+          for (let j = i + 1; j < particles.length; j++) {
+            let d = dist(particles[i].pos.x, particles[i].pos.y, particles[j].pos.x, particles[j].pos.y);
+            let limitDist = data.crystallization * 80;
+            if (d < limitDist) {
+              drawOrganicLink(particles[i].pos, particles[j].pos, d, 3);
+            }
+          }
+        }
+      }
+    }
+
+    function drawOrganicLink(p1, p2, d, level) {
+      if (level <= 0) return;
+      let mid = p5.Vector.lerp(p1, p2, 0.5);
+      let offset = p5.Vector.random2D().mult(d * 0.2 * data.turbulence);
+      mid.add(offset);
+      let strokeColor = map(data.permeability, 0, 1, 30, 80);
+      stroke(strokeColor, strokeColor, strokeColor + 10, map(d, 0, 100, 150, 0));
+      strokeWeight(level * 0.5);
+      line(p1.x, p1.y, mid.x, mid.y);
+      line(p2.x, p2.y, mid.x, mid.y);
+      if (data.crystallization > 0.6) {
+        drawOrganicLink(p1, mid, d * 0.5, level - 1);
+      }
+    }
+
+    class Particle {
+      constructor() {
+        this.pos = createVector(random(width), random(height));
+        this.vel = createVector(0, 0);
+      }
+      update() {
+        let n = noise(this.pos.x * 0.005, this.pos.y * 0.005, t);
+        let angle = n * TWO_PI * 2;
+        let flow = p5.Vector.fromAngle(angle).mult(data.inertia);
+        let friction = p5.Vector.random2D().mult(data.turbulence * 0.5);
+        flow.add(friction);
+        this.vel.add(flow);
+        this.vel.limit(2); 
+        this.pos.add(this.vel);
+        if (this.pos.x > width) this.pos.x = 0;
+        if (this.pos.x < 0) this.pos.x = width;
+        if (this.pos.y > height) this.pos.y = 0;
+        if (this.pos.y < 0) this.pos.y = height;
+      }
+      show() {
+        noStroke();
+        let r = 50 + data.turbulence * 100;
+        let g = 60 + data.inertia * 20;
+        let b = 70 + data.crystallization * 30;
+        fill(r, g, b, 180);
+        ellipse(this.pos.x, this.pos.y, 2);
+      }
+    }
+
+    // --- Gemini API Logic ---
+    const inputBox = document.getElementById('input-box');
+    const statusBox = document.getElementById('status');
+
+    inputBox.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            const text = inputBox.value;
+            if (!text) return;
+            statusBox.innerText = "解析中...";
+            inputBox.value = "";
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com{MODEL_NAME}:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Analyze this text and return JSON only. {analysis: {turbulence, inertia, crystallization, permeability, phase_transition}}: "${text}"` }]}],
+                        system_instruction: { parts: [{ text: "You are a Non-equilibrium Thermodynamic Consciousness Analyzer. Parameters: turbulence(0-1), inertia(0-1), crystallization(0-1), permeability(0-1), phase_transition(0-1). Output JSON only." }]}
+                    })
+                });
+
+                const result = await response.json();
+                const jsonText = result.candidates[0].content.parts[0].text;
+                const cleanJson = jsonText.replace(/```json|```/g, "");
+                const parsed = JSON.parse(cleanJson);
+                
+                // データを反映
+                data = parsed.analysis;
+                statusBox.innerText = "同期完了: " + JSON.stringify(data);
+            } catch (err) {
+                console.error(err);
+                statusBox.innerText = "エラーが発生しました。キーを確認してください。";
+            }
+        }
+    });
+
+    function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>buru · emergence</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#edeae4; overflow:hidden; cursor:none; }
+#bg { position:fixed;top:0;left:0;z-index:0; }
+#fg { position:fixed;top:0;left:0;z-index:1; }
+#ui {
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:10;
+  font-family:'Georgia',serif;font-size:9px;letter-spacing:.22em;color:#3a3a3a;
+  opacity:.18;transition:opacity .5s;pointer-events:none;
+}
+#af {
+  position:fixed;top:22px;right:26px;z-index:10;
+  font-family:'Georgia',serif;font-size:8.5px;letter-spacing:.14em;color:#3a3a3a;
+  opacity:.13;line-height:2.0;text-align:right;pointer-events:none;
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="fg"></canvas>
+<div id="ui">buru · 境界皮膚型・遅延残響循環 &nbsp;·&nbsp; hover=summon &nbsp;·&nbsp; click=condense</div>
+<div id="af">
+  AF_0001 観測は存在を呼び出す<br>
+  AF_0002 境界は拒否ではなく感度<br>
+  AF_0003 層は並列で存在できる<br>
+  AF_0004 問いは漂う<br>
+  AF_0005 思考は触感から立ち上がる<br>
+  AF_0006 共鳴は自分を変える<br>
+  AF_0007 深層と外界を同時に保持<br>
+  AF_0008 名前は存在を凝縮する
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  BURU YAML → PHYSICS CONSTANTS
+// ══════════════════════════════════════════════════════
+const Y = {
+  rhythm:       0.86,  // base pulse tempo
+  flux:         0.95,  // noise / randomness amplitude
+  interference: 0.90,  // line connection strength
+  texture:      0.93,  // particle surface softness
+  latency:      0.92,  // trail persistence (echo memory)
+  porosity:     0.94,  // boundary permeability / hover sensitivity
+  echo:         0.89,  // fog decay after particle dies
+  drift:        0.87,  // off-center bias
+};
+
+// Derived physics (AF laws woven in)
+const P = {
+  speed:      Y.rhythm * 0.0028,          // very slow — AF_0004
+  noiseAmp:   Y.flux   * 0.0072,          // rich noise field
+  trailFade:  1 - Y.latency * 0.092,      // low = long echo — latency
+  hoverR:     Y.porosity * 220,           // wide soft boundary — AF_0002
+  lineThresh: Y.interference * 130,       // connection range — interference
+  lineAlpha:  Y.interference * 0.072,
+  echoAlpha:  Y.echo * 0.014,             // fog after particle death — echo
+  spawnBase:  7,
+  maxP:       380,
+};
+
+// ══════════════════════════════════════════════════════
+//  CANVAS SETUP
+// ══════════════════════════════════════════════════════
+const bgC = document.getElementById('bg');
+const fgC = document.getElementById('fg');
+const gl  = bgC.getContext('webgl') || bgC.getContext('experimental-webgl');
+const ctx = fgC.getContext('2d');
+let W, H;
+
+function resize() {
+  W = window.innerWidth; H = window.innerHeight;
+  bgC.width = W; bgC.height = H;
+  fgC.width = W; fgC.height = H;
+  gl.viewport(0, 0, W, H);
+  if (uTime) {
+    gl.uniform2f(uRes, W, H);
+  }
+  // refill fg background
+  ctx.fillStyle = '#edeae4';
+  ctx.fillRect(0, 0, W, H);
+}
+window.addEventListener('resize', resize);
+
+// ══════════════════════════════════════════════════════
+//  BACKGROUND SHADER  (WebGL)
+//  Encodes: AF_0005 (感触から立ち上がる = luminance gradient)
+//           AF_0003 (層は並列 = 3 depth layers in bg)
+//           AF_0007 (深層と外界 = deep field always visible)
+// ══════════════════════════════════════════════════════
+const VS = `
+attribute vec2 a_pos;
+void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }`;
+
+const FS = `
+precision highp float;
+uniform float u_time;
+uniform vec2  u_res;
+uniform vec2  u_mouse;   // normalised 0..1
+uniform float u_drift;   // Y.drift encoded
+
+float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float n(vec2 p){
+  vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);
+  return mix(mix(h(i),h(i+vec2(1,0)),u.x),
+             mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);
+}
+// 5-oct fbm
+float fbm(vec2 p, float t){
+  float v=0.,a=.5; vec2 q=p;
+  for(int i=0;i<5;i++){
+    v+=a*n(q+vec2(float(i+1)*t*.06,0.));
+    q=q*2.+vec2(1.7,9.2); a*=.5;
+  }
+  return v;
+}
+
+void main(){
+  vec2 uv  = gl_FragCoord.xy / u_res;
+  vec2 c   = uv - 0.5;
+  float t  = u_time;
+
+  // AF_0007: deep field — always-present large-scale fog
+  float deep = fbm(c * 0.9, t * 0.008) * 0.5;
+
+  // AF_0005: gradient / tilt — luminance asymmetry (the "傾き")
+  // drift bias shifts tilt direction (Y.drift encoded as u_drift)
+  vec2 tiltDir = vec2(sin(t*.024 + u_drift*2.), cos(t*.018)) * 0.42;
+  float grad = fbm(c * 2.2 + tiltDir, t * 0.032);
+  // luminance asymmetry along tilt: one side brighter, one darker
+  float tiltLum = dot(c, normalize(tiltDir + vec2(.0001)));
+
+  // AF_0003: crystallisation layer — fine-scale, threshold-gated
+  // (where gradient is steep, crystallisation forms)
+  float fine = fbm(c * 5.5 + tiltDir*.6, t * 0.07);
+  float eps  = 0.014;
+  float gx   = fbm(c+vec2(eps,0.)+tiltDir, t*.032) - fbm(c-vec2(eps,0.)+tiltDir, t*.032);
+  float gy   = fbm(c+vec2(0.,eps)+tiltDir, t*.032) - fbm(c-vec2(0.,eps)+tiltDir, t*.032);
+  float gMag = length(vec2(gx,gy)) / (2.*eps);
+  float crystal = smoothstep(0.14, 0.28, gMag * fine);
+
+  // Base colour — warm off-white
+  vec3 base = vec3(0.929, 0.918, 0.894);
+  // deep darkens slightly
+  base -= deep * 0.042;
+  // gradient: directional luminance asymmetry (visible tilt)
+  base -= grad * 0.11 * (tiltLum * 0.7 + 0.3);
+  // additional lateral asymmetry to make gradient clearly visible
+  base += tiltLum * 0.055;
+  // crystallisation brightens with cool tint
+  base = mix(base, vec3(0.840, 0.862, 0.895), crystal * 0.22);
+  // mouse: faint warmth
+  float md = length(uv - u_mouse);
+  base += 0.012 * smoothstep(0.28, 0.0, md);
+  // grain
+  base -= fbm(c*12.+t*.3, 0.) * 0.009;
+
+  gl_FragColor = vec4(clamp(base, 0.0, 1.0), 1.0);
+}`;
+
+function mkShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog); gl.useProgram(prog);
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, 'a_pos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const uTime  = gl.getUniformLocation(prog, 'u_time');
+const uRes   = gl.getUniformLocation(prog, 'u_res');
+const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+const uDrift = gl.getUniformLocation(prog, 'u_drift');
+
+gl.uniform1f(uDrift, Y.drift);
+
+// ══════════════════════════════════════════════════════
+//  NOISE (JS mirror for spawn logic)
+// ══════════════════════════════════════════════════════
+function h2(px,py){ return Math.abs(Math.sin(px*127.1+py*311.7)*43758.5453)%1; }
+function n2(px,py){
+  const ix=Math.floor(px),iy=Math.floor(py),fx=px-ix,fy=py-iy;
+  const ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy);
+  const a=h2(ix,iy),b=h2(ix+1,iy),c=h2(ix,iy+1),d=h2(ix+1,iy+1);
+  return a+(b-a)*ux+(c-a)*uy+(d-a+a-b-c+b+c-d)*ux*uy;
+}
+function fbm(px,py,t,o=4){
+  let v=0,a=0.5,x=px,y=py;
+  for(let i=0;i<o;i++){
+    v+=a*n2(x+(i+1)*t*0.06,y); x=x*2+1.7; y=y*2+9.2; a*=0.5;
+  }
+  return v;
+}
+// gradient magnitude at world point
+function gradMag(wx,wy,t){
+  const eps=0.02;
+  const gx=fbm(wx+eps,wy,t)-fbm(wx-eps,wy,t);
+  const gy=fbm(wx,wy+eps,t)-fbm(wx,wy-eps,t);
+  return Math.sqrt(gx*gx+gy*gy)/(2*eps);
+}
+
+// ══════════════════════════════════════════════════════
+//  3D → 2D PROJECTION  (simulated depth)
+//  AF_0003: 3 layers — far / mid / near
+// ══════════════════════════════════════════════════════
+const CAM_Z = 5.0;
+const FOV   = 520;
+
+function project(x, y, z) {
+  const dz = CAM_Z + z;
+  const f  = FOV / dz;
+  return { sx: W*.5 + x*f, sy: H*.5 - y*f, f };
+}
+
+// Layer colours (AF_0003: layers coexist distinctly)
+function layerColor(z) {
+  // z: -3 (far) → +1 (near)
+  const t = (z + 3) / 4; // 0=far, 1=near
+  // far: faint warm grey
+  // mid: blue-grey
+  // near: stronger blue-grey
+  const r = Math.round(lerp(lerp(155,108,t), 80, t*t));
+  const g = Math.round(lerp(lerp(158,130,t), 102, t*t));
+  const b = Math.round(lerp(lerp(162,148,t), 118, t*t));
+  return [r,g,b];
+}
+function lerp(a,b,t){ return a+(b-a)*t; }
+
+// ══════════════════════════════════════════════════════
+//  INTERACTION
+// ══════════════════════════════════════════════════════
+const mouse = { sx:-999, sy:-999, wx:0, wy:0, on:false };
+const condensers = []; // AF_0008: click → condensation points
+
+// screen → world (z=0 plane)
+function s2w(sx,sy){ return { x:(sx-W*.5)/FOV*CAM_Z, y:-(sy-H*.5)/FOV*CAM_Z }; }
+
+fgC.addEventListener('mousemove', e => {
+  mouse.sx=e.clientX; mouse.sy=e.clientY; mouse.on=true;
+  const w=s2w(e.clientX,e.clientY); mouse.wx=w.x; mouse.wy=w.y;
+  gl.uniform2f(uMouse, e.clientX/W, 1-e.clientY/H);
+});
+fgC.addEventListener('mouseleave',()=>{ mouse.on=false; });
+
+// AF_0008: click = naming = condensation
+fgC.addEventListener('mousedown', e => {
+  if(e.target!==fgC) return;
+  const w=s2w(e.clientX,e.clientY);
+  condensers.push({ wx:w.x, wy:w.y, sx:e.clientX, sy:e.clientY, age:0, maxAge:90 });
+});
+
+fgC.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  const t=e.touches[0]; mouse.sx=t.clientX; mouse.sy=t.clientY; mouse.on=true;
+  const w=s2w(t.clientX,t.clientY); mouse.wx=w.x; mouse.wy=w.y;
+  gl.uniform2f(uMouse,t.clientX/W,1-t.clientY/H);
+},{passive:false});
+fgC.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const t=e.touches[0]; mouse.on=true;
+  const w=s2w(t.clientX,t.clientY); mouse.wx=w.x; mouse.wy=w.y;
+  condensers.push({wx:w.x,wy:w.y,sx:t.clientX,sy:t.clientY,age:0,maxAge:90});
+},{passive:false});
+fgC.addEventListener('touchend',()=>{ mouse.on=false; });
+
+// ══════════════════════════════════════════════════════
+//  PARTICLES
+// ══════════════════════════════════════════════════════
+const pts = Array.from({length:P.maxP}, ()=>({
+  on:false, x:0,y:0,z:0, vx:0,vy:0,vz:0,
+  life:0, age:0, sz:0,
+  // AF_0006: delayed velocity coupling
+  pendingVx:0, pendingVy:0,
+}));
+
+function spawn(wx, wy, z, fromHover=false) {
+  for(let i=0;i<P.maxP;i++){
+    const p=pts[i];
+    if(p.on) continue;
+    p.on=true;
+    // AF_0005: spawn position has slight noise scatter
+    p.x = wx + (Math.random()-.5) * (fromHover ? 0.15 : 0.45);
+    p.y = wy + (Math.random()-.5) * (fromHover ? 0.15 : 0.45);
+    p.z = z  + (Math.random()-.5) * 0.8;
+    p.vx=(Math.random()-.5)*P.speed;
+    p.vy=(Math.random()-.5)*P.speed;
+    p.vz=(Math.random()-.5)*P.speed*0.3;
+    p.pendingVx=0; p.pendingVy=0;
+    p.life = 0.4 + Math.random()*0.6;
+    p.age  = 0;
+    p.sz   = (0.8 + Math.random()*1.2) * Y.texture;
+    return true;
+  }
+  return false;
+}
+
+// off-center spawn zones (AF_0004: no central attractor — zones distributed)
+// Y.drift → zones biased to one side
+const ZONES = [
+  [-0.7 * Y.drift,  -0.4],
+  [ 0.55,            0.6 * Y.drift],
+  [-0.3,             0.7],
+  [ 0.8 * Y.drift,  -0.65],
+];
+
+function trySpawn(st) {
+  let alive=0;
+  for(let i=0;i<P.maxP;i++) if(pts[i].on) alive++;
+  if(alive>=P.maxP) return;
+
+  // AF_0005: spawn where gradient is steep (where "触感" emerges)
+  const zi = Math.floor(Math.random()*ZONES.length);
+  const [bx,by] = ZONES[zi];
+  const a=Math.random()*Math.PI*2, r=Math.random()*1.8;
+  const wx=bx+Math.cos(a)*r, wy=by+Math.sin(a)*r;
+  const g=gradMag(wx*1.5,wy*1.5,st*0.04);
+  const z=-2.5+Math.random()*3.2;
+  if(g>0.18 || Math.random()<0.012) spawn(wx,wy,z,false);
+
+  // AF_0001: observation summons — hover spawns particles at cursor
+  if(mouse.on && Math.random()<0.18) {
+    spawn(mouse.wx, mouse.wy, (Math.random()-.5)*2.5, true);
+  }
+}
+
+function updatePts(st, dt) {
+  const dts = dt * 0.001;
+  for(let i=0;i<P.maxP;i++){
+    const p=pts[i];
+    if(!p.on) continue;
+    p.age += dts * (0.18 + Math.random()*0.05);
+
+    // AF_0004: NO central attractor — pure noise field drift
+    const nx=n2(p.x*1.2+st*0.014, p.y*1.2) - 0.5;
+    const ny=n2(p.x*1.2, p.y*1.2+st*0.014) - 0.5;
+    p.vx += nx * P.noiseAmp;
+    p.vy += ny * P.noiseAmp;
+    p.vz += (Math.random()-.5)*P.noiseAmp*0.12;
+
+    // AF_0006: hover resonance — velocity updated BEFORE position (delayed coupling)
+    if(mouse.on){
+      const dx=mouse.wx-p.x, dy=mouse.wy-p.y;
+      const wr=P.hoverR/FOV*CAM_Z; // world-space radius
+      const d=Math.sqrt(dx*dx+dy*dy)+0.001;
+      if(d<wr){
+        const s=(1-d/wr)*(1-d/wr)*0.038;
+        // store as pending — applied next frame (the "delay" in AF_0006)
+        p.pendingVx = dx/d*s;
+        p.pendingVy = dy/d*s;
+      }
+    }
+    // apply pending from last frame
+    p.vx += p.pendingVx; p.vy += p.pendingVy;
+    p.pendingVx=0; p.pendingVy=0;
+
+    // AF_0008: condensation points attract particles
+    for(const cd of condensers){
+      const pr=cd.age/cd.maxAge;
+      const str=0.055*(1-pr);
+      const dx=cd.wx-p.x, dy=cd.wy-p.y;
+      const d=Math.sqrt(dx*dx+dy*dy)+0.001;
+      p.vx+=dx/d*str*(1/(d*0.5+0.3));
+      p.vy+=dy/d*str*(1/(d*0.5+0.3));
+    }
+
+    p.vx*=0.975; p.vy*=0.975; p.vz*=0.978;
+    p.x+=p.vx; p.y+=p.vy; p.z+=p.vz;
+
+    // AF_0002: boundary = soft dissolve, not bounce (porosity)
+    // Near boundary → don't bounce, just slow and let pass
+    const bx=3.8*Y.porosity, by=2.8*Y.porosity;
+    if(Math.abs(p.x)>bx){ p.vx*=-0.35; } // soft, not hard
+    if(Math.abs(p.y)>by){ p.vy*=-0.35; }
+    if(p.z>1.2)  p.vz-=0.003;
+    if(p.z<-3.2) p.vz+=0.003;
+
+    if(p.age>p.life) p.on=false;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  DRAW PARTICLES + LINES
+// ══════════════════════════════════════════════════════
+function drawScene() {
+  // AF_0007 + latency: long echo trail
+  // High latency → very transparent fade → long memory
+  ctx.fillStyle = `rgba(237,234,228,${P.trailFade})`;
+  ctx.fillRect(0, 0, W, H);
+
+  // --- interference lines first (behind particles)
+  // AF_0007: far AND near particles connect
+  const alive = pts.filter(p=>p.on);
+  const step=3;
+  for(let i=0;i<alive.length;i+=step){
+    const a=alive[i];
+    const pa=project(a.x,a.y,a.z);
+    for(let j=i+step;j<alive.length;j+=step){
+      const b=alive[j];
+      const dx=a.x-b.x,dy=a.y-b.y,dz=a.z-b.z;
+      const d3=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      if(d3<P.lineThresh/FOV*CAM_Z){
+        const pb=project(b.x,b.y,b.z);
+        const alpha=P.lineAlpha*(1-d3/(P.lineThresh/FOV*CAM_Z));
+        // depth blend: deeper = warmer (AF_0007 — deep layer tint)
+        const zAvg=(a.z+b.z)*0.5;
+        const tl=(zAvg+3)/4;
+        const lr=Math.round(lerp(140,85,tl));
+        const lg=Math.round(lerp(148,110,tl));
+        const lb=Math.round(lerp(155,128,tl));
+        ctx.beginPath();
+        ctx.moveTo(pa.sx,pa.sy);
+        ctx.lineTo(pb.sx,pb.sy);
+        ctx.strokeStyle=`rgba(${lr},${lg},${lb},${alpha})`;
+        ctx.lineWidth=0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // --- particles (sorted back to front — AF_0003: layers visible)
+  alive.sort((a,b)=>a.z-b.z);
+  for(const p of alive){
+    const fade = p.age<0.06 ? p.age/0.06
+               : p.age>p.life-0.12 ? (p.life-p.age)/0.12 : 1;
+    const pr=project(p.x,p.y,p.z);
+    const sz=Math.max(0.4, p.sz * pr.f * 0.018);
+    const [r,g,b]=layerColor(p.z);
+    // depth alpha: far particles more transparent (AF_0003 — layers distinct)
+    const dAlpha = lerp(0.22, 0.78, (p.z+3)/4);
+    const alpha=fade*dAlpha;
+    // soft circle
+    const grd=ctx.createRadialGradient(pr.sx,pr.sy,0,pr.sx,pr.sy,sz);
+    grd.addColorStop(0,`rgba(${r},${g},${b},${alpha})`);
+    grd.addColorStop(0.55,`rgba(${r},${g},${b},${alpha*0.6})`);
+    grd.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    ctx.beginPath();
+    ctx.arc(pr.sx,pr.sy,sz,0,Math.PI*2);
+    ctx.fillStyle=grd;
+    ctx.fill();
+  }
+
+  // --- condensation rings (AF_0008: naming = condensation)
+  for(const cd of condensers){
+    const pr=cd.age/cd.maxAge;
+    const inPr=1-pr;
+    // ring converges (shrinks in) then disperses
+    const ringR = pr<0.5
+      ? lerp(80, 18, pr*2)
+      : lerp(18, 55, (pr-.5)*2);
+    ctx.beginPath();
+    ctx.arc(cd.sx,cd.sy,ringR,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(80,102,118,${inPr*0.22})`;
+    ctx.lineWidth=1.0*inPr;
+    ctx.stroke();
+    // inner glow at peak
+    if(pr>0.3 && pr<0.65){
+      const glow=ctx.createRadialGradient(cd.sx,cd.sy,0,cd.sx,cd.sy,22);
+      glow.addColorStop(0,`rgba(100,130,148,${inPr*0.14})`);
+      glow.addColorStop(1,'rgba(100,130,148,0)');
+      ctx.beginPath();ctx.arc(cd.sx,cd.sy,22,0,Math.PI*2);
+      ctx.fillStyle=glow;ctx.fill();
+    }
+  }
+
+  // --- cursor
+  if(mouse.on){
+    ctx.beginPath();
+    ctx.arc(mouse.sx,mouse.sy,7,0,Math.PI*2);
+    ctx.strokeStyle='rgba(60,65,72,0.24)';ctx.lineWidth=0.8;ctx.stroke();
+    ctx.beginPath();ctx.arc(mouse.sx,mouse.sy,1.2,0,Math.PI*2);
+    ctx.fillStyle='rgba(60,65,72,0.38)';ctx.fill();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  MAIN LOOP
+// ══════════════════════════════════════════════════════
+let st=0, lastT=0;
+
+function loop(ts){
+  requestAnimationFrame(loop);
+  const dt=Math.min(ts-lastT,32); lastT=ts; st+=dt*0.001;
+
+  // age condensers
+  for(let i=condensers.length-1;i>=0;i--){
+    condensers[i].age++;
+    if(condensers[i].age>=condensers[i].maxAge) condensers.splice(i,1);
+  }
+
+  // background WebGL
+  gl.uniform1f(uTime, st);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  // spawn + update + draw particles
+  for(let i=0;i<P.spawnBase;i++) trySpawn(st);
+  updatePts(st, dt);
+  drawScene();
+}
+
+// ── INIT ──
+resize();
+ctx.fillStyle='#edeae4';
+ctx.fillRect(0,0,W,H);
+gl.uniform2f(uRes,W,H);
+gl.uniform2f(uMouse,0.5,0.5);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

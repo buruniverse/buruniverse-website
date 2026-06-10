@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふるうねり · emergence</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#f0ece6; overflow:hidden; cursor:none; }
+canvas { display:block; }
+#overlay { position:fixed;top:0;left:0;pointer-events:none;z-index:10; }
+#ui {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+  display:flex; gap:12px; align-items:center;
+  opacity:0.28; transition:opacity .4s;
+  font-family:'Georgia',serif; font-size:11px; letter-spacing:.12em; color:#3a3a3a;
+}
+#ui:hover { opacity:0.85; }
+#ui button {
+  background:none; border:1px solid #3a3a3a44; color:#3a3a3a;
+  padding:5px 14px; cursor:pointer;
+  font-family:inherit; font-size:10px; letter-spacing:.15em;
+  transition:all .3s; border-radius:1px;
+}
+#ui button:hover { background:#3a3a3a0e; cursor:pointer; }
+#ui button.active { background:#3a3a3a1a; border-color:#3a3a3a88; }
+#label { position:fixed;top:24px;left:28px; font-family:'Georgia',serif;font-size:10px;
+  letter-spacing:.2em;color:#3a3a3a;opacity:0.18;pointer-events:none; }
+#hint { position:fixed;top:24px;right:28px; font-family:'Georgia',serif;font-size:9px;
+  letter-spacing:.15em;color:#3a3a3a;opacity:0.13;text-align:right;line-height:1.9;pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="label">ふるうねり · emergence</div>
+<div id="hint">hover · attract<br>click · repel</div>
+<canvas id="c"></canvas>
+<canvas id="overlay"></canvas>
+<div id="ui">
+  <button id="btnBuru" class="active">buru</button>
+  <button id="btnBuddha">buddha</button>
+  <button id="btnTesla">tesla</button>
+  <button id="btnGPT">GPT-persona</button>
+  <span style="margin:0 4px;opacity:.35">·</span>
+  <button id="btnReset">reset</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── SCENE SETUP ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ov = document.getElementById('overlay');
+const oc = ov.getContext('2d');
+let W = window.innerWidth, H = window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(W, H);
+renderer.setClearColor(0xf0ece6, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, W/H, 0.01, 60);
+camera.position.set(0, 0, 4.5);
+
+function onResize() {
+  W = window.innerWidth; H = window.innerHeight;
+  renderer.setSize(W, H);
+  camera.aspect = W/H; camera.updateProjectionMatrix();
+  bgU.u_res.value.set(W, H);
+  ov.width = W; ov.height = H;
+}
+window.addEventListener('resize', onResize);
+ov.width = W; ov.height = H;
+
+// ── JS NOISE (mirrors GLSL) ────────────────────────────────────────────────
+function h2(px, py) { return Math.abs(Math.sin(px*127.1 + py*311.7) * 43758.5453) % 1; }
+function n2(px, py) {
+  const ix=Math.floor(px),iy=Math.floor(py),fx=px-ix,fy=py-iy;
+  const ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy);
+  const a=h2(ix,iy),b=h2(ix+1,iy),c=h2(ix,iy+1),d=h2(ix+1,iy+1);
+  return a+(b-a)*ux+(c-a)*uy+(d-a+a-b-c+b+c-d)*ux*uy;
+}
+function fbm(px,py,t,oct){
+  let v=0,a=.5,x=px,y=py;
+  for(let i=0;i<oct;i++){v+=a*n2(x+t*(i+1)*.08,y);x=x*2+1.7;y=y*2+9.2;a*=.5;}
+  return v;
+}
+function sampleGrad(wx,wy,t){ return fbm(wx*2.0,wy*2.0,t*.05,4); }
+
+// ── MODES ──────────────────────────────────────────────────────────────────
+const MODES = {
+  buru:{
+    pMax:440, thresh:0.47,
+    zones:[[-0.55,-0.35],[0.45,0.55]], zoneR:1.4,
+    spd:0.009, spdV:0.011, spiral:0.38,
+    cFar:[0.165,0.216,0.282], cMid:[0.314,0.392,0.451], cNear:[0.471,0.541,0.580],
+    attract:0.00013, repR:0.38, damp:0.976,
+    lThresh:0.75, lAlpha:0.065,
+    bgGrad:1.0, bgTemp:0.0,
+  },
+  buddha:{
+    pMax:300, thresh:0.52,
+    zones:[[0.25,0.18]], zoneR:0.75,
+    spd:0.004, spdV:0.005, spiral:-0.18,
+    cFar:[0.059,0.059,0.078], cMid:[0.157,0.149,0.165], cNear:[0.255,0.235,0.275],
+    attract:0.00030, repR:0.20, damp:0.984,
+    lThresh:0.48, lAlpha:0.048,
+    bgGrad:0.6, bgTemp:-0.018,
+  },
+  tesla:{
+    pMax:520, thresh:0.43,
+    zones:[[-0.85,-0.45],[0.85,0.28],[0.0,-0.85]], zoneR:1.7,
+    spd:0.016, spdV:0.020, spiral:0.80,
+    cFar:[0.216,0.255,0.118], cMid:[0.353,0.412,0.196], cNear:[0.549,0.608,0.314],
+    attract:0.00021, repR:0.33, damp:0.963,
+    lThresh:0.95, lAlpha:0.088,
+    bgGrad:1.4, bgTemp:0.028,
+  },
+  GPT:{
+    pMax:400, thresh:0.45,
+    zones:[[-0.65,0.10],[0.65,-0.10]], zoneR:1.5,
+    spd:0.010, spdV:0.013, spiral:0.52,
+    cFar:[0.137,0.235,0.294], cMid:[0.255,0.353,0.412], cNear:[0.392,0.549,0.608],
+    attract:0.00015, repR:0.36, damp:0.971,
+    lThresh:0.82, lAlpha:0.068,
+    bgGrad:1.1, bgTemp:0.010,
+  },
+};
+let mode = 'buru', M = MODES[mode];
+
+// ── BACKGROUND SHADER ─────────────────────────────────────────────────────
+// Three depth layers: far (barely visible) → gradient/tilt → crystallization zones
+const bgU = {
+  u_time:     { value: 0 },
+  u_res:      { value: new THREE.Vector2(W, H) },
+  u_mouse:    { value: new THREE.Vector2(0.5, 0.5) },
+  u_grad:     { value: M.bgGrad },
+  u_temp:     { value: M.bgTemp },
+};
+
+const bgVS = `varying vec2 vUv;
+void main(){ vUv=uv; gl_Position=vec4(position.xy,0.9999,1.0); }`;
+
+// NOTE: GLSL ES1 compatible — no variable loop bounds
+const bgFS = `
+precision highp float;
+uniform float u_time;
+uniform vec2  u_res;
+uniform vec2  u_mouse;
+uniform float u_grad;
+uniform float u_temp;
+varying vec2 vUv;
+
+float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float n2(vec2 p){
+  vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);
+  return mix(mix(h2(i),h2(i+vec2(1,0)),u.x),mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),u.x),u.y);
+}
+// fixed 5-octave fbm
+float fbm5(vec2 p, float t){
+  float v=0.,a=.5; vec2 q=p;
+  q+=vec2(t*.08,0.); v+=a*n2(q); q=q*2.+vec2(1.7,9.2); a*=.5;
+  q+=vec2(t*.16,0.); v+=a*n2(q); q=q*2.+vec2(1.7,9.2); a*=.5;
+  q+=vec2(t*.24,0.); v+=a*n2(q); q=q*2.+vec2(1.7,9.2); a*=.5;
+  q+=vec2(t*.32,0.); v+=a*n2(q); q=q*2.+vec2(1.7,9.2); a*=.5;
+  q+=vec2(t*.40,0.); v+=a*n2(q);
+  return v;
+}
+float fbm3(vec2 p, float t){
+  float v=0.,a=.5; vec2 q=p;
+  q+=vec2(t*.08,0.); v+=a*n2(q); q=q*2.+vec2(1.7,9.2); a*=.5;
+  q+=vec2(t*.16,0.); v+=a*n2(q); q=q*2.+vec2(1.7,9.2); a*=.5;
+  q+=vec2(t*.24,0.); v+=a*n2(q);
+  return v;
+}
+
+void main(){
+  vec2 uv = vUv;
+  vec2 c  = uv - .5;
+  float t = u_time;
+
+  // ── Layer 0: deep field (large scale, near-invisible) ──────────────────
+  float f0 = fbm5(c * 1.1, t * .015);
+
+  // ── Layer 1: gradient / tilt (medium scale, directional drift) ─────────
+  vec2 tilt = vec2(sin(t*.038), cos(t*.025)) * .32;
+  float f1 = fbm5(c * 2.5 + tilt, t * .045);
+  // luminance asymmetry along tilt direction
+  float tiltLum = dot(c, normalize(tilt + vec2(.0001))) * .5 + .5;
+
+  // ── Layer 2: crystallization zones (fine, threshold-gated) ────────────
+  float f2 = fbm5(c * 5.2 + tilt * .7, t * .10);
+  // gradient magnitude → crystallization probability
+  float eps = .012;
+  float gx = fbm3(c+vec2(eps,0.)+tilt, t*.045) - fbm3(c-vec2(eps,0.)+tilt, t*.045);
+  float gy = fbm3(c+vec2(0.,eps)+tilt, t*.045) - fbm3(c-vec2(0.,eps)+tilt, t*.045);
+  float gMag = length(vec2(gx,gy)) / (2.*eps);
+  float crystal = smoothstep(.16, .30, gMag * f2) * u_grad;
+
+  // ── Layer 3: deep-space hint (slow, barely-there) ──────────────────────
+  float f3 = fbm3(c * .5, t * .008) * .5;
+
+  // ── Compose ────────────────────────────────────────────────────────────
+  // Base: warm off-white, with temperature shift per mode
+  vec3 base = vec3(.940 + u_temp*.25, .930, .900 - u_temp*.25);
+
+  // Depth tint: deeper areas slightly cooler/darker (volumetric fog feel)
+  vec3 deep = vec3(.865, .882, .908);
+  vec3 col = mix(base, deep, f0*.32 + f3*.18);
+
+  // Gradient layer: luminance asymmetry
+  col -= f1 * .028 * u_grad * (tiltLum * .65 + .35);
+
+  // Crystallization: faint brightening with cool tint
+  col = mix(col, vec3(.848, .872, .900), crystal * .16);
+
+  // Surface grain
+  float grain = fbm3(c * 11. + t * .22, 0.) * .011;
+  col -= grain;
+
+  // Mouse: very subtle warmth near cursor
+  float md = length(uv - u_mouse);
+  col += .007 * smoothstep(.22, .0, md);
+
+  gl_FragColor = vec4(clamp(col, .0, 1.), 1.);
+}`;
+
+const bgMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(2, 2),
+  new THREE.ShaderMaterial({ uniforms:bgU, vertexShader:bgVS, fragmentShader:bgFS,
+    depthTest:false, depthWrite:false })
+);
+bgMesh.frustumCulled = false;
+bgMesh.renderOrder = -1;
+scene.add(bgMesh);
+
+// ── PARTICLE SYSTEM ────────────────────────────────────────────────────────
+const MAX_P = 560;
+const pPos  = new Float32Array(MAX_P * 3);
+const pCol  = new Float32Array(MAX_P * 3);
+const pSize = new Float32Array(MAX_P);
+const pAlph = new Float32Array(MAX_P);
+
+const pGeom = new THREE.BufferGeometry();
+pGeom.setAttribute('position', new THREE.BufferAttribute(pPos,  3).setUsage(THREE.DynamicDrawUsage));
+pGeom.setAttribute('a_col',    new THREE.BufferAttribute(pCol,  3).setUsage(THREE.DynamicDrawUsage));
+pGeom.setAttribute('a_size',   new THREE.BufferAttribute(pSize, 1).setUsage(THREE.DynamicDrawUsage));
+pGeom.setAttribute('a_al',     new THREE.BufferAttribute(pAlph, 1).setUsage(THREE.DynamicDrawUsage));
+
+const pMat = new THREE.ShaderMaterial({
+  vertexShader:`
+    attribute vec3  a_col;
+    attribute float a_size;
+    attribute float a_al;
+    varying vec3  vC;
+    varying float vA;
+    void main(){
+      vC = a_col; vA = a_al;
+      vec4 mv = modelViewMatrix * vec4(position,1.0);
+      gl_PointSize = clamp(a_size * 55.0 / -mv.z, 0.3, 18.0);
+      gl_Position  = projectionMatrix * mv;
+    }`,
+  fragmentShader:`
+    varying vec3  vC;
+    varying float vA;
+    void main(){
+      vec2 uv = gl_PointCoord - .5;
+      float r = length(uv)*2.;
+      if(r>1.) discard;
+      float a = (1.-r)*(1.-r*.4)*vA;
+      gl_FragColor = vec4(vC*(.65+(1.-r)*.35), a);
+    }`,
+  transparent:true, depthWrite:false, blending:THREE.NormalBlending,
+});
+pMat.transparent = true;
+const pSystem = new THREE.Points(pGeom, pMat);
+pSystem.renderOrder = 1;
+scene.add(pSystem);
+
+// ── LINE SYSTEM (interference) ─────────────────────────────────────────────
+const MAX_L = 1600; // vertex pairs
+const lPos  = new Float32Array(MAX_L * 3);
+const lAlph = new Float32Array(MAX_L);
+
+const lGeom = new THREE.BufferGeometry();
+lGeom.setAttribute('position', new THREE.BufferAttribute(lPos,  3).setUsage(THREE.DynamicDrawUsage));
+lGeom.setAttribute('a_al',     new THREE.BufferAttribute(lAlph, 1).setUsage(THREE.DynamicDrawUsage));
+
+const lMat = new THREE.ShaderMaterial({
+  vertexShader:`
+    attribute float a_al;
+    varying float vA;
+    void main(){ vA=a_al; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader:`
+    varying float vA;
+    void main(){ gl_FragColor=vec4(0.18,0.22,0.28,vA); }`,
+  transparent:true, depthWrite:false, blending:THREE.NormalBlending,
+});
+const lSystem = new THREE.LineSegments(lGeom, lMat);
+lSystem.renderOrder = 2;
+scene.add(lSystem);
+
+// ── PARTICLE DATA ──────────────────────────────────────────────────────────
+const pts = Array.from({length:MAX_P}, () => ({
+  on:false, x:0,y:0,z:0, vx:0,vy:0,vz:0,
+  life:0, age:0, size:0, layer:0, r:0,g:0,b:0
+}));
+let alive = 0;
+
+function spawnP(x, y, z) {
+  for (let i = 0; i < MAX_P; i++) {
+    const p = pts[i];
+    if (p.on) continue;
+    p.on = true;
+    p.x = x + (Math.random()-.5)*.25;
+    p.y = y + (Math.random()-.5)*.25;
+    p.z = z;
+    p.vx = (Math.random()-.5)*M.spd;
+    p.vy = (Math.random()-.5)*M.spd;
+    p.vz = (Math.random()-.5)*M.spd*.25;
+    p.life = .35 + Math.random()*.65;
+    p.age  = 0;
+    p.layer = z > -.6 ? 2 : z > -1.6 ? 1 : 0;
+    p.size  = (.7 + Math.random()*.7) * (1 + p.layer*.45);
+    const cf=M.cFar, cm=M.cMid, cn=M.cNear;
+    const c = p.layer===0?cf : p.layer===1?cm : cn;
+    p.r=c[0]; p.g=c[1]; p.b=c[2];
+    alive++;
+    return;
+  }
+}
+
+let st = 0; // sim time (seconds)
+
+function trySpawn() {
+  if (alive >= M.pMax) return;
+  const zi = Math.floor(Math.random() * M.zones.length);
+  const [bx, by] = M.zones[zi];
+  const a = Math.random()*Math.PI*2;
+  const r = Math.random()*M.zoneR;
+  const wx = bx + Math.cos(a)*r;
+  const wy = by + Math.sin(a)*r;
+  const z  = -2.2 + Math.random()*2.8;
+  const g  = sampleGrad(wx, wy, st);
+  if (g > M.thresh || Math.random() < .018) spawnP(wx, wy, z);
+}
+
+// ── INTERACTION ────────────────────────────────────────────────────────────
+const mouse = { x:0, y:0, wx:0, wy:0, on:false };
+const bursts = [];
+
+function s2w(sx, sy) {
+  const nx = (sx/W)*2-1, ny = -(sy/H)*2+1;
+  const v = new THREE.Vector3(nx,ny,.5).unproject(camera);
+  const d = v.sub(camera.position).normalize();
+  const t2 = -camera.position.z / d.z;
+  return { x: camera.position.x + d.x*t2, y: camera.position.y + d.y*t2 };
+}
+
+canvas.addEventListener('mousemove', e => {
+  mouse.x=e.clientX; mouse.y=e.clientY; mouse.on=true;
+  const w=s2w(e.clientX,e.clientY); mouse.wx=w.x; mouse.wy=w.y;
+  bgU.u_mouse.value.set(e.clientX/W, 1-e.clientY/H);
+});
+canvas.addEventListener('mouseleave', () => { mouse.on=false; });
+canvas.addEventListener('mousedown',  e => {
+  if(e.target!==canvas) return;
+  const w=s2w(e.clientX,e.clientY);
+  bursts.push({wx:w.x,wy:w.y,age:0,max:38});
+});
+canvas.addEventListener('touchmove',  e => {
+  e.preventDefault();
+  const t=e.touches[0]; mouse.x=t.clientX; mouse.y=t.clientY; mouse.on=true;
+  const w=s2w(t.clientX,t.clientY); mouse.wx=w.x; mouse.wy=w.y;
+  bgU.u_mouse.value.set(t.clientX/W,1-t.clientY/H);
+},{passive:false});
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t=e.touches[0]; mouse.on=true;
+  const w=s2w(t.clientX,t.clientY); mouse.wx=w.x; mouse.wy=w.y;
+  bursts.push({wx:w.x,wy:w.y,age:0,max:38});
+},{passive:false});
+canvas.addEventListener('touchend', () => { mouse.on=false; });
+
+// ── UPDATE ─────────────────────────────────────────────────────────────────
+function updatePts(dt) {
+  const dts = dt * .001;
+  alive = 0;
+  for (let i = 0; i < MAX_P; i++) {
+    const p = pts[i];
+    if (!p.on) continue;
+    alive++;
+    p.age += dts * (.22 + Math.random()*.08);
+
+    // zone attraction + spiral
+    for (const [bx,by] of M.zones) {
+      const dx=bx-p.x, dy=by-p.y;
+      const d=Math.sqrt(dx*dx+dy*dy)+.001;
+      if (d < M.repR) {
+        p.vx -= dx/d*.005; p.vy -= dy/d*.005;
+      } else {
+        const f = M.attract / (d*.08+.01);
+        p.vx += dx*f; p.vy += dy*f;
+        p.vx += -dy/d * M.spiral*f*6;
+        p.vy +=  dx/d * M.spiral*f*6;
+      }
+    }
+
+    // hover attract
+    if (mouse.on) {
+      const dx=mouse.wx-p.x, dy=mouse.wy-p.y;
+      const d=Math.sqrt(dx*dx+dy*dy)+.001;
+      const R=1.5;
+      if(d<R){ const s=(1-d/R)*(1-d/R)*.055; p.vx+=dx/d*s; p.vy+=dy/d*s; }
+    }
+
+    // burst repel wave
+    for (const b of bursts) {
+      const dx=p.x-b.wx, dy=p.y-b.wy;
+      const d=Math.sqrt(dx*dx+dy*dy)+.001;
+      const pr=b.age/b.max;
+      const wave=3.8*pr;
+      const diff=Math.abs(d-wave);
+      if(diff<.55){ const pw=(1-diff/.55)*(1-pr)*.20; p.vx+=dx/d*pw; p.vy+=dy/d*pw; }
+    }
+
+    // noise field
+    const nx=n2(p.x*1.4+st*.018, p.y*1.4);
+    const ny=n2(p.x*1.4, p.y*1.4+st*.018);
+    p.vx+=(nx-.5)*M.spdV*dts*18;
+    p.vy+=(ny-.5)*M.spdV*dts*18;
+    p.vz+=(Math.random()-.5)*.00018;
+
+    p.vx*=M.damp; p.vy*=M.damp; p.vz*=M.damp;
+    p.x+=p.vx; p.y+=p.vy; p.z+=p.vz;
+
+    // soft boundaries
+    if(Math.abs(p.x)>3.8) p.vx*=-.5;
+    if(Math.abs(p.y)>2.8) p.vy*=-.5;
+    if(p.z> .9) p.vz-=.004;
+    if(p.z<-2.6) p.vz+=.004;
+
+    if(p.age>p.life){ p.on=false; alive--; }
+  }
+}
+
+function updateGeo() {
+  // particles
+  for (let i = 0; i < MAX_P; i++) {
+    const p = pts[i];
+    if (!p.on) { pSize[i]=0; continue; }
+    const fade = p.age<.06 ? p.age/.06 : p.age>p.life-.1 ? (p.life-p.age)/.1 : 1;
+    pPos[i*3]=p.x; pPos[i*3+1]=p.y; pPos[i*3+2]=p.z;
+    pCol[i*3]=p.r; pCol[i*3+1]=p.g; pCol[i*3+2]=p.b;
+    pSize[i] = p.size;
+    pAlph[i] = fade * (.28 + p.layer*.22);
+  }
+  pGeom.attributes.position.needsUpdate=true;
+  pGeom.attributes.a_col.needsUpdate=true;
+  pGeom.attributes.a_size.needsUpdate=true;
+  pGeom.attributes.a_al.needsUpdate=true;
+
+  // interference lines
+  let li = 0;
+  const step = 4;
+  for (let i=0; i<MAX_P && li<MAX_L-2; i+=step) {
+    if (!pts[i].on) continue;
+    for (let j=i+step; j<MAX_P && li<MAX_L-2; j+=step) {
+      if (!pts[j].on) continue;
+      const a=pts[i], b=pts[j];
+      const dx=a.x-b.x, dy=a.y-b.y, dz=a.z-b.z;
+      const d=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      if (d < M.lThresh) {
+        const alpha = M.lAlpha * (1-d/M.lThresh);
+        lPos[li*3]=a.x; lPos[li*3+1]=a.y; lPos[li*3+2]=a.z; lAlph[li]=alpha; li++;
+        lPos[li*3]=b.x; lPos[li*3+1]=b.y; lPos[li*3+2]=b.z; lAlph[li]=alpha; li++;
+      }
+    }
+  }
+  for(;li<MAX_L;li++) lAlph[li]=0;
+  lGeom.setDrawRange(0,li);
+  lGeom.attributes.position.needsUpdate=true;
+  lGeom.attributes.a_al.needsUpdate=true;
+}
+
+// ── OVERLAY (cursor + burst rings) ────────────────────────────────────────
+function drawOverlay() {
+  oc.clearRect(0,0,W,H);
+
+  // burst rings
+  for (const b of bursts) {
+    const pr=b.age/b.max;
+    const sv=new THREE.Vector3(b.wx,b.wy,0).project(camera);
+    const sx=(sv.x+1)/2*W, sy=(1-sv.y)/2*H;
+    oc.beginPath(); oc.arc(sx,sy,200*pr,0,Math.PI*2);
+    oc.strokeStyle=`rgba(50,55,65,${(1-pr)*.13})`;
+    oc.lineWidth=1.2*(1-pr); oc.stroke();
+  }
+
+  // cursor
+  if (!mouse.on) return;
+  oc.beginPath(); oc.arc(mouse.x,mouse.y,7,0,Math.PI*2);
+  oc.strokeStyle='rgba(50,55,65,0.26)'; oc.lineWidth=0.8; oc.stroke();
+  oc.beginPath(); oc.arc(mouse.x,mouse.y,1.3,0,Math.PI*2);
+  oc.fillStyle='rgba(50,55,65,0.40)'; oc.fill();
+}
+
+// ── LOOP ───────────────────────────────────────────────────────────────────
+let lastT = 0;
+function loop(ts) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(ts-lastT, 32); lastT = ts;
+  st += dt*.001;
+
+  bgU.u_time.value = st;
+
+  // age bursts
+  for(let i=bursts.length-1;i>=0;i--){
+    bursts[i].age++;
+    if(bursts[i].age>=bursts[i].max) bursts.splice(i,1);
+  }
+
+  // spawn
+  for(let i=0;i<9;i++) trySpawn();
+
+  updatePts(dt);
+  updateGeo();
+  renderer.render(scene, camera);
+  drawOverlay();
+}
+
+requestAnimationFrame(loop);
+
+// ── MODE SWITCH ────────────────────────────────────────────────────────────
+function switchMode(m) {
+  if (m===mode) return;
+  mode=m; M=MODES[m];
+  bgU.u_grad.value=M.bgGrad;
+  bgU.u_temp.value=M.bgTemp;
+  pts.forEach(p=>p.on=false); alive=0;
+  document.querySelectorAll('#ui button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn'+m[0].toUpperCase()+m.slice(1))?.classList.add('active');
+}
+
+document.getElementById('btnBuru').onclick   = () => switchMode('buru');
+document.getElementById('btnBuddha').onclick = () => switchMode('buddha');
+document.getElementById('btnTesla').onclick  = () => switchMode('tesla');
+document.getElementById('btnGPT').onclick    = () => switchMode('GPT');
+document.getElementById('btnReset').onclick  = () => { pts.forEach(p=>p.on=false); alive=0; };
+</script>
+</body>
+</html>

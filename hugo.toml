@@ -26,10 +26,17 @@ defaultContentLanguage = 'en'        # ★ここを英語(en)に変更！
     #     weight = 2
 
     [[languages.en.menu.main]]
+        identifier = 'topology'
+        pre = '∂'
+        name = 'Topology'
+        url = '/topology/'
+        weight = 2
+
+    [[languages.en.menu.main]]
         identifier = 'blog'
         pre = 'μ'
         name = 'Book Shelf 〈Blog〉'
-        url = '/blog_shelf/'  # 英語がメインになったので /en/posts ではなく /posts/ でOKになります
+        url = '/blog_shelf/'
         weight = 3
 
     # [[languages.en.menu.main]]
@@ -68,10 +75,17 @@ defaultContentLanguage = 'en'        # ★ここを英語(en)に変更！
     title = '∴ぶるニバース∵'
     
      [[languages.ja.menu.main]]
+         identifier = 'topology'
+         pre = '∂'
+         name = 'トポロジー'
+         url = '/topology/'
+         weight = 2
+
+     [[languages.ja.menu.main]]
          identifier = 'blog'
          pre = 'μ'
          name = '本棚〈ブログ〉'
-         url = '/blog_shelf/' 
+         url = '/blog_shelf/'
          weight = 3
 
 # disableKinds = ["taxonomy", "term"]
