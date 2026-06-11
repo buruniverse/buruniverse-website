@@ -107,7 +107,9 @@
         display: block;
         width: clamp(140px, 22vw, 260px);
         margin: 0 auto;
+        transition: filter 0.8s ease;
     }
+    body.dark-mode #list-logo { filter: invert(1) brightness(0.97); }
     #list-logo-text {
         font-family: "Noto Sans Mono", monospace;
         font-size: clamp(14px, 2.5vw, 22px);

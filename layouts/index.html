@@ -42,8 +42,9 @@
       transform: translateX(-50%);
       z-index: 100; pointer-events: none; text-align: center;
     }
-    #logo { display: block; width: clamp(180px, 30vw, 360px); margin: 0 auto; }
+    #logo { display: block; width: clamp(180px, 30vw, 360px); margin: 0 auto; transition: filter 0.8s ease; }
     @media (max-width: 767px) { #logo { width: 66vw; } }
+    body.dark-mode #logo { filter: invert(1) brightness(0.97); }
 
     /* ── Lang ── */
     #lang {
