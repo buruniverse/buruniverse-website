@@ -177,11 +177,18 @@
   <p id="subtitle">- Foggy Exploration Stuff-</p>
 </div>
 
-<div id="lang">
-  <span id="home-theme-btn">☽</span>
-  <span style="opacity:0.35"> ｜ </span>
-  {{ if eq .Lang "en" }}<a id="home-lang-btn" href="/ja/">JP</a>{{ else }}<a id="home-lang-btn" href="/">EN</a>{{ end }}
-</div>
+<div id="lang" data-lang="{{ .Lang }}"></div>
+<script>
+(function(){
+  var d = document.getElementById('lang');
+  var isEN = d.dataset.lang === 'en';
+  d.innerHTML =
+    '<span id="home-theme-btn">☽</span>' +
+    '<span style="opacity:0.35"> ｜ </span>' +
+    '<a id="home-lang-btn" href="' + (isEN ? '/ja/' : '/') + '">' +
+    (isEN ? 'JP' : 'EN') + '</a>';
+})();
+</script>
 <div id="stage"></div>
 <div id="kaomoji"></div>
 
