@@ -180,7 +180,7 @@
 <div id="lang">
   <span id="home-theme-btn">☽</span>
   <span style="opacity:0.35"> ｜ </span>
-  <a id="home-lang-btn" href="{{ if eq .Lang `en` }}/ja/{{ else }}/{{ end }}">{{ if eq .Lang "en" }}JP{{ else }}EN{{ end }}</a>
+  {{ if eq .Lang "en" }}<a id="home-lang-btn" href="/ja/">JP</a>{{ else }}<a id="home-lang-btn" href="/">EN</a>{{ end }}
 </div>
 <div id="stage"></div>
 <div id="kaomoji"></div>
