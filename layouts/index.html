@@ -88,7 +88,7 @@
       transition: opacity .25s ease;
       font-family: var(--font);
     }
-    .char[data-t="s"] { font-size: clamp(24px, 3.2vw, 40px); font-weight: 600; }
+    .char[data-t="s"] { font-size: clamp(24px, 3.2vw, 40px); font-weight: 600; pointer-events: auto; cursor: pointer; }
     .char[data-t="l"] { font-size: clamp(11px, 1.6vw, 16px); opacity: .68; }
     @media (max-width: 767px) { .char[data-t="l"] { font-size: clamp(13px, 1.6vw, 18px); } }
 
@@ -397,6 +397,12 @@ ITEMS.forEach((item, itemIdx) => {
     const el = document.createElement('span');
     el.className = 'char'; el.dataset.t = 's'; el.dataset.item = item.id;
     el.textContent = ch;
+    // attach click handler at creation time — most reliable
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (item.isChat) { openChat(); return; }
+      window.location.href = item.href;
+    });
     stage.appendChild(el);
     allSpans.push({ el, itemIdx, isSym: true, charIdx });
   });
@@ -785,20 +791,6 @@ async function loadLLM() {
 allSpans.forEach((sp, i) => {
   const d = drifts[i];
   setAbsPos(sp.el, d.cx, d.cy, d.rot * .2, false);
-});
-
-// Make symbol characters directly clickable (navigate even in drift state)
-allSpans.forEach(function(sp) {
-  if (sp.isSym) {
-    var item = ITEMS[sp.itemIdx];
-    sp.el.style.pointerEvents = 'auto';
-    sp.el.style.cursor = 'pointer';
-    sp.el.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (item.isChat) { openChat(); return; }
-      window.location.href = item.href;
-    });
-  }
 });
 
 scatter(); // begins drift loop; currentPattern=-1 so centers stay as initialized
