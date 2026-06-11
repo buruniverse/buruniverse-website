@@ -760,6 +760,19 @@ allSpans.forEach((sp, i) => {
   setAbsPos(sp.el, d.cx, d.cy, d.rot * .2, false);
 });
 
+// Event delegation: handle clicks on symbol chars via stage
+stage.addEventListener('click', function(e) {
+  var el = e.target;
+  if (el.dataset && el.dataset.t === 's' && el.dataset.item) {
+    var item = ITEMS.find(function(it) { return it.id === el.dataset.item; });
+    if (item) {
+      e.stopPropagation();
+      if (item.isChat) { openChat(); return; }
+      window.location.href = item.href;
+    }
+  }
+});
+
 scatter(); // begins drift loop; currentPattern=-1 so centers stay as initialized
 </script>
 </body>
