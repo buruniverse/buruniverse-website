@@ -171,24 +171,12 @@
 <body>
 
 <div id="header">
-  <img id="logo" src="/images/logo_new.PNG" alt="∴ Buruniverse ∵"
-       onerror="this.style.display='none';document.getElementById('logo-text').style.display='block'">
+  <img id="logo" src="/images/logo_new.PNG" alt="∴ Buruniverse ∵">
   <div id="logo-text" style="display:none;font-size:clamp(16px,3vw,26px);font-weight:600;letter-spacing:.15em;">∴ Buruniverse ∵</div>
   <p id="subtitle">- Foggy Exploration Stuff-</p>
 </div>
 
-<div id="lang" data-lang="{{ .Lang }}"></div>
-<script>
-(function(){
-  var d = document.getElementById('lang');
-  var isEN = d.dataset.lang === 'en';
-  d.innerHTML =
-    '<span id="home-theme-btn">☽</span>' +
-    '<span style="opacity:0.35"> ｜ </span>' +
-    '<a id="home-lang-btn" href="' + (isEN ? '/ja/' : '/') + '">' +
-    (isEN ? 'JP' : 'EN') + '</a>';
-})();
-</script>
+<div id="lang"></div>
 <div id="stage"></div>
 <div id="kaomoji"></div>
 
@@ -212,6 +200,27 @@
 
 <script>
 'use strict';
+
+// ── Bootstrap: build #lang and fix logo fallback ─────────
+(function() {
+  // language from <html lang="..."> — set by Hugo template, safe
+  var isEN = document.documentElement.lang === 'en';
+  document.getElementById('lang').innerHTML =
+    '<span id="home-theme-btn">☽</span>' +
+    '<span style="opacity:0.35"> ｜ </span>' +
+    '<a id="home-lang-btn" href="' + (isEN ? '/ja/' : '/') + '">' +
+    (isEN ? 'JP' : 'EN') + '</a>';
+  // logo onerror (removed from HTML attr to avoid Hugo context confusion)
+  var logo = document.getElementById('logo');
+  logo.onerror = function() {
+    this.style.display = 'none';
+    document.getElementById('logo-text').style.display = 'block';
+  };
+  if (logo.complete && logo.naturalWidth === 0) {
+    logo.style.display = 'none';
+    document.getElementById('logo-text').style.display = 'block';
+  }
+})();
 
 // ── Data ──────────────────────────────────────────────────
 const ITEMS = [
