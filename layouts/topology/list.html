@@ -48,7 +48,6 @@
             column-gap: 30px;
             row-gap: 0; /* rows handled by per-item margin */
             align-items: start;
-            justify-items: center;
         }
         #topo-gallery::-webkit-scrollbar { display: none; }
 
@@ -73,6 +72,8 @@
         .blob-circle {
             width: clamp(240px, 28vw, 400px);
             height: clamp(240px, 28vw, 400px);
+            margin-left: auto;
+            margin-right: auto;
             border-radius: 50%;
             overflow: hidden;
             position: relative;

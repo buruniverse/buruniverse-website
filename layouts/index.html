@@ -42,7 +42,7 @@
       transform: translateX(-50%);
       z-index: 100; pointer-events: none; text-align: center;
     }
-    #logo { display: block; width: clamp(180px, 30vw, 360px); margin: 0 auto; transition: filter 0.8s ease; }
+    #logo { display: block; width: clamp(180px, 30vw, 360px); margin: 0 auto; transition: filter 0.8s ease; pointer-events: none; }
     @media (max-width: 767px) { #logo { width: 66vw; } }
     body.dark-mode #logo { filter: invert(1) brightness(0.97); }
 
@@ -50,7 +50,7 @@
     #lang {
       position: fixed; top: 1.2rem; right: 1.5rem;
       font-size: 16px; color: var(--dim);
-      z-index: 100;
+      z-index: 200;
       letter-spacing: .08em; user-select: none;
       font-family: var(--font);
       display: flex; align-items: center; gap: 0;
@@ -706,6 +706,7 @@ function onInteraction() {
 document.addEventListener('mousemove',  onInteraction, { passive: true });
 document.addEventListener('touchstart', onInteraction, { passive: true });
 document.addEventListener('keydown',    onInteraction, { passive: true });
+document.addEventListener('click',      onInteraction, { passive: true }); // first click also arranges
 window.addEventListener('scroll',       onInteraction, { passive: true });  // body-scroll mode
 stage.addEventListener('wheel',         onInteraction, { passive: true });
 stage.addEventListener('touchmove',     onInteraction, { passive: true });
@@ -784,6 +785,20 @@ async function loadLLM() {
 allSpans.forEach((sp, i) => {
   const d = drifts[i];
   setAbsPos(sp.el, d.cx, d.cy, d.rot * .2, false);
+});
+
+// Make symbol characters directly clickable (navigate even in drift state)
+allSpans.forEach(function(sp) {
+  if (sp.isSym) {
+    var item = ITEMS[sp.itemIdx];
+    sp.el.style.pointerEvents = 'auto';
+    sp.el.style.cursor = 'pointer';
+    sp.el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (item.isChat) { openChat(); return; }
+      window.location.href = item.href;
+    });
+  }
 });
 
 scatter(); // begins drift loop; currentPattern=-1 so centers stay as initialized
